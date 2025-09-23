@@ -1,24 +1,18 @@
-//
-//  ContentView.swift
-//  PT-Helper
-//
-//  Created by Noy Fisher on 9/22/25.
-//
-
 import SwiftUI
+import FirebaseAuth
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        NavigationView {
+            VStack(spacing: 16) {
+                Text("You are signed in.")
+                Button("Sign out") {
+                    try? Auth.auth().signOut()
+                }
+                .buttonStyle(.bordered)
+            }
+            .navigationTitle("PT Helper")
+            .padding()
         }
-        .padding()
     }
-}
-
-#Preview {
-    ContentView()
 }

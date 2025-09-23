@@ -1,17 +1,15 @@
-//
-//  PT_HelperApp.swift
-//  PT-Helper
-//
-//  Created by Noy Fisher on 9/22/25.
-//
-
 import SwiftUI
+import FirebaseCore
 
 @main
-struct PT_HelperApp: App {
+struct PainPointApp: App {
+    init() {
+        FirebaseApp.configure()   // uses GoogleService-Info.plist in this target
+    }
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView()
         }
     }
 }
