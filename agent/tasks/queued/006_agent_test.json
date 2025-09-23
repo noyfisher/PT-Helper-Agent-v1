@@ -1,0 +1,21 @@
+{
+    "title": "Agent Test Swift File",
+    "context": {
+      "notes": [
+        "This is only for testing the updated workflow.",
+        "Do not modify existing files.",
+        "Create one brand new Swift file with a simple function."
+      ]
+    },
+    "deliverables": [
+      {
+        "path": "ios/PT-Helper/AgentTest.swift",
+        "type": "new"
+      }
+    ],
+    "acceptance": [
+      "File ios/PT-Helper/AgentTest.swift exists",
+      "It defines a function agentTest() that prints 'Agent workflow test OK'"
+    ]
+  }
+  
