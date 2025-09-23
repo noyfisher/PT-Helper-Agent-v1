@@ -32,25 +32,29 @@ jobs:
         run: |
           python agent/bot.py
 
+      - name: Show repo tree after agent
+        run: ls -R
+
+      - name: Print agent outputs
+        run: |
+          echo "=== last_branch_name ==="
+          cat agent/last_branch_name.txt || true
+          echo "=== last_pr_body ==="
+          cat agent/last_pr_body.txt || true
+          echo "=== output.json ==="
+          test -f agent/output.json && cat agent/output.json || echo "(no output.json)"
+
       - name: Create branch and commit changes
         id: commit
         run: |
-          BRANCH="agent-$(cat agent/last_branch_name.txt)"
+          SAFE_NAME=$(cat agent/last_branch_name.txt | tr '[:space:]' '-' | tr -cd '[:alnum:]-_.')
+          BRANCH="agent-${SAFE_NAME}-${GITHUB_RUN_NUMBER}"
 
           git config user.name "agent-bot"
           git config user.email "bot@example.com"
 
-          # Make sure we have latest refs
-          git fetch origin --prune
-
-          # If branch already exists remotely, delete it to avoid conflicts
-          if git ls-remote --exit-code --heads origin "$BRANCH" > /dev/null 2>&1; then
-            echo "Remote branch $BRANCH exists; deleting it."
-            git push origin --delete "$BRANCH" || true
-          fi
-
-          # Create fresh branch from main
-          git checkout -B "$BRANCH" origin/main
+          # Branch off from current state (keeps agent changes)
+          git checkout -b "$BRANCH"
 
           git add -A
           if git diff --cached --quiet; then
@@ -60,7 +64,7 @@ jobs:
           fi
 
           git commit -m "Agent: $(cat agent/last_branch_name.txt)"
-          git push --force-with-lease --set-upstream origin "$BRANCH"
+          git push --set-upstream origin "$BRANCH"
           echo "branch=$BRANCH" >> $GITHUB_OUTPUT
           echo "changed=true" >> $GITHUB_OUTPUT
 
