@@ -1,0 +1,23 @@
+{
+    "title": "Hello World Test",
+    "context": {
+      "stack": "SwiftUI + Firebase",
+      "notes": [
+        "This is only a dummy test task",
+        "Do not modify existing files",
+        "Create a brand new Swift file with a simple print statement"
+      ]
+    },
+    "deliverables": [
+      {
+        "path": "ios/PT-Helper/HelloWorld.swift",
+        "type": "new"
+      }
+    ],
+    "acceptance": [
+      "A new file ios/PT-Helper/HelloWorld.swift exists",
+      "The file contains a Swift function that prints 'Agent is running!'",
+      "No other files are modified"
+    ]
+  }
+  
