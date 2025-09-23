@@ -1,0 +1,26 @@
+{
+    "title": "Safe Feature Stub (About screen + utils + tests + docs)",
+    "context": {
+      "notes": [
+        "Create ONLY new files. Do NOT modify existing files.",
+        "Purpose: verify PR creation on a multi-file change while keeping it safe.",
+        "Add a tiny About screen, a small utils file, one unit test, and a short doc."
+      ]
+    },
+    "deliverables": [
+      { "path": "ios/PT-Helper/AgentAboutView.swift", "type": "new" },
+      { "path": "ios/PT-Helper/AgentUtils.swift", "type": "new" },
+      { "path": "ios/PT-Helper/AgentDemoMenu.swift", "type": "new" },
+      { "path": "ios/PT-HelperTests/AgentUtilsTests.swift", "type": "new" },
+      { "path": "docs/AGENT_README.md", "type": "new" }
+    ],
+    "acceptance": [
+      "A SwiftUI view named AgentAboutView exists and can be presented (no external deps).",
+      "AgentUtils defines a public function agentVersion() -> String returning a non-empty string.",
+      "AgentDemoMenu is a small SwiftUI view that links to AgentAboutView (standalone file; not wired into app).",
+      "AgentUtilsTests compiles and contains at least one test that asserts agentVersion() is not empty.",
+      "docs/AGENT_README.md explains the agent workflow at a high level (1–2 paragraphs).",
+      "No existing files in the repo are modified."
+    ]
+  }
+  
