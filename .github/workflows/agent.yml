@@ -26,7 +26,6 @@ jobs:
       - name: Prepare agent branch
         id: prep
         run: |
-          # Use last branch name if present; else a default
           SAFE_NAME="$(test -f agent/last_branch_name.txt && cat agent/last_branch_name.txt || echo run)"
           SAFE_NAME="$(echo "$SAFE_NAME" | tr '[:space:]' '-' | tr -cd '[:alnum:]-_.')"
           BRANCH="agent-${SAFE_NAME}-${GITHUB_RUN_NUMBER}"
@@ -34,7 +33,6 @@ jobs:
           git config user.name "agent-bot"
           git config user.email "bot@example.com"
 
-          # Create fresh branch from main and switch to it NOW
           git fetch origin --prune
           git checkout -B "$BRANCH" origin/main
 

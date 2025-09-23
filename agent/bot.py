@@ -59,8 +59,11 @@ def main():
 
     result = call_llm(task)
 
-    # Save raw output for debugging
-    (REPO_ROOT / "agent" / "output.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
+    # ✅ NEW: Save raw LLM output for debugging
+    (REPO_ROOT / "agent" / "output.json").write_text(
+        json.dumps(result, indent=2),
+        encoding="utf-8"
+    )
 
     title = result.get("title", "Agent Update")
     summary = result.get("summary", "")
