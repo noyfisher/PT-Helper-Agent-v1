@@ -3,11 +3,16 @@ name: Agent Runner
 on:
   push:
     paths:
-      - 'agent/tasks/queued/*.json'
-  workflow_dispatch: {}
+      - 'agent/tasks/queued/*.json'   # normal trigger: queue a task
+      - 'agent/output.json'           # cleanup trigger on merges to main
+  workflow_dispatch: {}               # manual trigger allowed
 
 jobs:
+  # =========================
+  # 1) Run the agent on a task
+  # =========================
   run-agent:
+    if: github.event_name != 'push' || !endsWith(github.event.head_commit.message, 'cleanup-output')  # don't run on cleanup commit
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -23,6 +28,8 @@ jobs:
         with:
           python-version: '3.11'
 
+      # Prepare a fresh agent branch *before* running the bot,
+      # so bot writes land directly on that branch.
       - name: Prepare agent branch
         id: prep
         run: |
@@ -64,12 +71,16 @@ jobs:
       - name: Commit changes (if any)
         id: commit
         run: |
+          # Explicitly add output.json so it appears in PRs
+          git add agent/output.json || true
           git add -A
+
           if git diff --cached --quiet; then
             echo "No changes to commit."
             echo "changed=false" >> $GITHUB_OUTPUT
             exit 0
           fi
+
           git commit -m "Agent: $(cat agent/last_branch_name.txt 2>/dev/null || echo update)"
           git push --set-upstream origin "${{ steps.prep.outputs.branch }}"
           echo "changed=true" >> $GITHUB_OUTPUT
@@ -83,3 +94,38 @@ jobs:
             $(cat agent/last_pr_body.txt 2>/dev/null || echo "Agent update")
           branch: ${{ steps.prep.outputs.branch }}
           base: main
+
+  # =======================================
+  # 2) Auto-clean output.json from main
+  #    (runs when output.json hits main)
+  # =======================================
+  cleanup-output-on-main:
+    if: github.ref_name == 'main'    # only ever run this on pushes to main
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Remove agent/output.json if present
+        id: clean
+        run: |
+          if [ -f agent/output.json ]; then
+            echo "output.json found on main — removing."
+            git config user.name "agent-bot"
+            git config user.email "bot@example.com"
+            git rm -f agent/output.json
+            git commit -m "cleanup-output: remove agent/output.json from main"
+            git push
+            echo "removed=true" >> $GITHUB_OUTPUT
+          else
+            echo "output.json not present on main — nothing to do."
+            echo "removed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Note cleanup
+        if: steps.clean.outputs.removed == 'true'
+        run: echo "Cleaned output.json from main."
