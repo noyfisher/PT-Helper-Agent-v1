@@ -1,0 +1,10 @@
+{
+  "title": "Test File Creation",
+  "context": { "notes": ["Create one new file only, no edits to existing."] },
+  "deliverables": [
+    { "path": "ios/PT-Helper/AgentCheck.swift", "type": "new" }
+  ],
+  "acceptance": [
+    "File ios/PT-Helper/AgentCheck.swift exists with a function agentCheck() that prints 'Agent check OK'"
+  ]
+}
