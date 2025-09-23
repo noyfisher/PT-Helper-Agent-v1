@@ -1,0 +1,13 @@
+{
+  "title": "multi-stub",
+  "context": { "notes": ["Create only new files; no edits."] },
+  "deliverables": [
+    { "path": "ios/PT-Helper/AgentAboutView.swift", "type": "new" },
+    { "path": "ios/PT-Helper/AgentUtils.swift", "type": "new" },
+    { "path": "ios/PT-HelperTests/AgentUtilsTests.swift", "type": "new" },
+    { "path": "docs/AGENT_README.md", "type": "new" }
+  ],
+  "acceptance": [
+    "New files exist with compilable Swift stubs and a short README"
+  ]
+}
