@@ -1,0 +1,16 @@
+{
+  "title": "string \u2014 short summary",
+  "acceptance_criteria": [
+    "List of verifiable outcomes"
+  ],
+  "tech_notes": [
+    "Key implementation hints"
+  ],
+  "owner_role": "orchestrator|ios|backend|qa|release",
+  "artifacts": [
+    "Relative paths the task must modify or add"
+  ],
+  "tests": [
+    "What tests to add or update"
+  ]
+}
