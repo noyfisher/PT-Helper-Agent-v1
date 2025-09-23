@@ -1,0 +1,22 @@
+{
+    "mode": "direct",
+    "title": "Direct Main Test",
+    "context": {
+      "notes": [
+        "This task is for verifying direct commit mode.",
+        "Do not edit any existing files.",
+        "Only create one new file on main directly."
+      ]
+    },
+    "deliverables": [
+      {
+        "path": "ios/PT-Helper/AgentDirectMain.swift",
+        "type": "new"
+      }
+    ],
+    "acceptance": [
+      "File ios/PT-Helper/AgentDirectMain.swift exists on main after the run",
+      "The file defines a function agentDirectMain() that prints 'Committed directly to main'"
+    ]
+  }
+  
