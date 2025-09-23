@@ -1,0 +1,12 @@
+{
+    "title": "force-diff-proof",
+    "context": { "notes": ["Create a unique file to guarantee a diff. Do not edit existing files."] },
+    "deliverables": [
+      { "path": "ios/PT-Helper/AgentProof_20250922.swift", "type": "new" }
+    ],
+    "acceptance": [
+      "File ios/PT-Helper/AgentProof_20250922.swift exists",
+      "Defines function agentProof_20250922() printing 'Unique agent proof'"
+    ]
+  }
+  
