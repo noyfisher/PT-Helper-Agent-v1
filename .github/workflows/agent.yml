@@ -13,13 +13,32 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - name: Checkout
+      - name: Checkout (full history)
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
+      - name: Prepare agent branch
+        id: prep
+        run: |
+          # Use last branch name if present; else a default
+          SAFE_NAME="$(test -f agent/last_branch_name.txt && cat agent/last_branch_name.txt || echo run)"
+          SAFE_NAME="$(echo "$SAFE_NAME" | tr '[:space:]' '-' | tr -cd '[:alnum:]-_.')"
+          BRANCH="agent-${SAFE_NAME}-${GITHUB_RUN_NUMBER}"
+
+          git config user.name "agent-bot"
+          git config user.email "bot@example.com"
+
+          # Create fresh branch from main and switch to it NOW
+          git fetch origin --prune
+          git checkout -B "$BRANCH" origin/main
+
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
 
       - name: Install deps
         run: |
@@ -44,36 +63,25 @@ jobs:
           echo "=== output.json ==="
           test -f agent/output.json && cat agent/output.json || echo "(no output.json)"
 
-      - name: Create branch and commit changes
+      - name: Commit changes (if any)
         id: commit
         run: |
-          SAFE_NAME=$(cat agent/last_branch_name.txt | tr '[:space:]' '-' | tr -cd '[:alnum:]-_.')
-          BRANCH="agent-${SAFE_NAME}-${GITHUB_RUN_NUMBER}"
-
-          git config user.name "agent-bot"
-          git config user.email "bot@example.com"
-
-          # Branch off from current state (keeps agent changes)
-          git checkout -b "$BRANCH"
-
           git add -A
           if git diff --cached --quiet; then
-            echo "no changes"
+            echo "No changes to commit."
             echo "changed=false" >> $GITHUB_OUTPUT
             exit 0
           fi
-
-          git commit -m "Agent: $(cat agent/last_branch_name.txt)"
-          git push --set-upstream origin "$BRANCH"
-          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+          git commit -m "Agent: $(cat agent/last_branch_name.txt 2>/dev/null || echo update)"
+          git push --set-upstream origin "${{ steps.prep.outputs.branch }}"
           echo "changed=true" >> $GITHUB_OUTPUT
 
       - name: Open Pull Request
         if: steps.commit.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v6
         with:
-          title: "Agent: $(cat agent/last_branch_name.txt)"
+          title: "Agent: $(cat agent/last_branch_name.txt 2>/dev/null || echo update)"
           body: |
-            $(cat agent/last_pr_body.txt)
-          branch: ${{ steps.commit.outputs.branch }}
+            $(cat agent/last_pr_body.txt 2>/dev/null || echo "Agent update")
+          branch: ${{ steps.prep.outputs.branch }}
           base: main
