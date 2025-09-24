@@ -2,6 +2,7 @@
   "task": {
     "type": "ios_feature",
     "mode": "pr",
+<<<<<<< HEAD
     "title": "Add Exercise Timer Feature",
     "description": "Create a simple exercise timer component for the PT-Helper app",
     "requirements": [
@@ -37,6 +38,93 @@
       "target_ios_version": "15.0+",
       "ui_framework": "SwiftUI",
       "architecture": "MVVM"
+=======
+    "title": "Create Exercise Tracking Module",
+    "description": "Build core exercise tracking functionality for PT-Helper app with SwiftUI interface and data models",
+    "requirements": [
+      "Exercise list view with search and filter capabilities",
+      "Individual exercise detail view with instructions",
+      "Progress tracking with sets, reps, and completion status",
+      "Timer functionality for timed exercises",
+      "Data persistence for user progress"
+    ],
+    "deliverables": [
+      {
+        "path": "ios/PT-Helper/Views/ExerciseListView.swift",
+        "type": "new",
+        "description": "Main exercise list with search and filtering"
+      },
+      {
+        "path": "ios/PT-Helper/Views/ExerciseDetailView.swift",
+        "type": "new",
+        "description": "Detailed exercise view with instructions and media"
+      },
+      {
+        "path": "ios/PT-Helper/ViewModels/ExerciseViewModel.swift",
+        "type": "new",
+        "description": "ViewModel managing exercise data and user interactions"
+      },
+      {
+        "path": "ios/PT-Helper/Models/Exercise.swift",
+        "type": "new",
+        "description": "Core exercise data model"
+      },
+      {
+        "path": "ios/PT-Helper/Models/ExerciseSession.swift",
+        "type": "new",
+        "description": "User exercise session and progress tracking"
+      },
+      {
+        "path": "ios/PT-Helper/Services/ExerciseService.swift",
+        "type": "new",
+        "description": "Service layer for exercise data management"
+      }
+    ],
+    "properties": {
+      "exercise_model": {
+        "id": "UUID",
+        "name": "String",
+        "description": "String",
+        "instructions": "[String]",
+        "duration": "Int?",
+        "repetitions": "Int?",
+        "sets": "Int?",
+        "difficulty": "ExerciseDifficulty",
+        "category": "ExerciseCategory",
+        "imageURL": "String?",
+        "videoURL": "String?"
+      },
+      "exercise_session": {
+        "id": "UUID",
+        "exerciseId": "UUID",
+        "startTime": "Date",
+        "endTime": "Date?",
+        "completedSets": "Int",
+        "completedReps": "Int",
+        "notes": "String?",
+        "painLevel": "Int?",
+        "isCompleted": "Bool"
+      }
+    },
+    "constraints": [
+      "Follow iOS accessibility guidelines for PT users",
+      "Large touch targets for users with limited mobility",
+      "Clear visual hierarchy and easy-to-read text",
+      "Support for VoiceOver and assistive technologies",
+      "Offline-first design for exercise tracking"
+    ],
+    "context": {
+      "app_domain": "physical_therapy",
+      "target_users": "PT patients and therapists",
+      "target_ios_version": "15.0+",
+      "architecture_pattern": "MVVM",
+      "ui_framework": "SwiftUI",
+      "safety_considerations": [
+        "Include pain level tracking",
+        "Warning messages for overexertion",
+        "Contact therapist functionality"
+      ]
+>>>>>>> 1b097101382f0b503d6e8275b44f57c25f1ea248
     }
   },
   "ios_context": {
@@ -44,19 +132,27 @@
     "bundle_identifier": "com.yourorg.PT-Helper",
     "target_name": "PT-Helper",
     "swift_files": [
+<<<<<<< HEAD
       "ios/PT-Helper/ViewModels/ExerciseViewModel.swift",
       "ios/PT-Helper/Models/Exercise.swift",
       "ios/PT-Helper/Models/ExerciseSession.swift",
       "ios/PT-Helper/PT-HelperTests/PT_HelperTests.swift",
       "ios/PT-Helper/Views/ExerciseDetailView.swift",
       "ios/PT-Helper/Views/ExerciseListView.swift",
+=======
+      "ios/PT-Helper/PT-HelperTests/PT_HelperTests.swift",
+>>>>>>> 1b097101382f0b503d6e8275b44f57c25f1ea248
       "ios/PT-Helper/PT-HelperUITests/PT_HelperUITestsLaunchTests.swift",
       "ios/PT-Helper/PT-HelperUITests/PT_HelperUITests.swift",
       "ios/PT-Helper/PT-Helper/LoginView.swift",
       "ios/PT-Helper/PT-Helper/RootView.swift",
       "ios/PT-Helper/PT-Helper/PT_HelperApp.swift",
+<<<<<<< HEAD
       "ios/PT-Helper/PT-Helper/ContentView.swift",
       "ios/PT-Helper/Services/ExerciseService.swift"
+=======
+      "ios/PT-Helper/PT-Helper/ContentView.swift"
+>>>>>>> 1b097101382f0b503d6e8275b44f57c25f1ea248
     ],
     "storyboards": [],
     "has_swiftui": true,
@@ -69,10 +165,13 @@
       "LAYOUT.md": "file",
       "PT-Helper/": {
         "GoogleService-Info.plist": "file",
+<<<<<<< HEAD
         "Models/": {
           "Exercise.swift": "file",
           "ExerciseSession.swift": "file"
         },
+=======
+>>>>>>> 1b097101382f0b503d6e8275b44f57c25f1ea248
         "PT-Helper/": {
           "Assets.xcassets/": {
             "AccentColor.colorset/": {},
@@ -105,6 +204,7 @@
         "PT-HelperUITests/": {
           "PT_HelperUITests.swift": "file",
           "PT_HelperUITestsLaunchTests.swift": "file"
+<<<<<<< HEAD
         },
         "Services/": {
           "ExerciseService.swift": "file"
@@ -115,11 +215,14 @@
         "Views/": {
           "ExerciseDetailView.swift": "file",
           "ExerciseListView.swift": "file"
+=======
+>>>>>>> 1b097101382f0b503d6e8275b44f57c25f1ea248
         }
       }
     }
   },
   "model_result": {
+<<<<<<< HEAD
     "title": "add-exercise-timer-feature",
     "summary": "Introduces a new exercise timer feature with a SwiftUI interface, a timer data model, and a view model for business logic.",
     "changes": [
@@ -137,6 +240,40 @@
         "path": "ios/PT-Helper/PT-Helper/ViewModels/TimerViewModel.swift",
         "action": "create",
         "content": "import Foundation\nimport Combine\n\nclass TimerViewModel: ObservableObject {\n    @Published var timer: Timer\n    private var timerSubscription: AnyCancellable?\n\n    var timeString: String {\n        let minutes = timer.timeRemaining / 60\n        let seconds = timer.timeRemaining % 60\n        return String(format: \"%02d:%02d\", minutes, seconds)\n    }\n\n    init() {\n        self.timer = Timer(duration: 300) // 5 minutes\n    }\n\n    func start() {\n        guard !timer.isRunning else { return }\n        timer.isRunning = true\n        timerSubscription = Timer.publish(every: 1, on: .main, in: .common)\n            .autoconnect()\n            .sink { [weak self] _ in\n                self?.updateTimer()\n            }\n    }\n\n    func stop() {\n        timer.isRunning = false\n        timerSubscription?.cancel()\n    }\n\n    func reset() {\n        stop()\n        timer.timeRemaining = timer.duration\n    }\n\n    private func updateTimer() {\n        guard timer.isRunning else { return }\n        if timer.timeRemaining > 0 {\n            timer.timeRemaining -= 1\n        } else {\n            stop()\n        }\n    }\n}"
+=======
+    "title": "create-exercise-tracking-module",
+    "summary": "Implements core exercise tracking functionality including views, models, and services for the PT-Helper app.",
+    "changes": [
+      {
+        "path": "ios/PT-Helper/Models/Exercise.swift",
+        "action": "create",
+        "content": "import Foundation\n\nenum ExerciseDifficulty: String, Codable {\n    case easy, medium, hard\n}\n\nenum ExerciseCategory: String, Codable {\n    case strength, cardio, flexibility\n}\n\nstruct Exercise: Identifiable, Codable {\n    var id: UUID\n    var name: String\n    var description: String\n    var instructions: [String]\n    var duration: Int?\n    var repetitions: Int?\n    var sets: Int?\n    var difficulty: ExerciseDifficulty\n    var category: ExerciseCategory\n    var imageURL: String?\n    var videoURL: String?\n}\n"
+      },
+      {
+        "path": "ios/PT-Helper/Models/ExerciseSession.swift",
+        "action": "create",
+        "content": "import Foundation\n\nstruct ExerciseSession: Identifiable, Codable {\n    var id: UUID\n    var exerciseId: UUID\n    var startTime: Date\n    var endTime: Date?\n    var completedSets: Int\n    var completedReps: Int\n    var notes: String?\n    var painLevel: Int?\n    var isCompleted: Bool\n}\n"
+      },
+      {
+        "path": "ios/PT-Helper/Services/ExerciseService.swift",
+        "action": "create",
+        "content": "import Foundation\n\nclass ExerciseService {\n    func fetchExercises() -> [Exercise] {\n        // Fetch exercises from a data source\n        return []\n    }\n    \n    func saveSession(session: ExerciseSession) {\n        // Save exercise session data\n    }\n}\n"
+      },
+      {
+        "path": "ios/PT-Helper/ViewModels/ExerciseViewModel.swift",
+        "action": "create",
+        "content": "import Foundation\nimport Combine\n\nclass ExerciseViewModel: ObservableObject {\n    @Published var exercises: [Exercise] = []\n    @Published var selectedExercise: Exercise?\n    private var exerciseService = ExerciseService()\n    \n    func loadExercises() {\n        exercises = exerciseService.fetchExercises()\n    }\n}\n"
+      },
+      {
+        "path": "ios/PT-Helper/Views/ExerciseListView.swift",
+        "action": "create",
+        "content": "import SwiftUI\n\nstruct ExerciseListView: View {\n    @StateObject private var viewModel = ExerciseViewModel()\n    @State private var searchText = \"\"\n    \n    var body: some View {\n        NavigationView {\n            List {\n                ForEach(viewModel.exercises.filter { searchText.isEmpty ? true : $0.name.contains(searchText) }) { exercise in\n                    NavigationLink(destination: ExerciseDetailView(exercise: exercise)) {\n                        Text(exercise.name)\n                    }\n                }\n            }\n            .searchable(text: $searchText)\n            .navigationTitle(\"Exercises\")\n            .onAppear { viewModel.loadExercises() }\n        }\n    }\n}\n\nstruct ExerciseListView_Previews: PreviewProvider {\n    static var previews: some View {\n        ExerciseListView()\n    }\n}\n"
+      },
+      {
+        "path": "ios/PT-Helper/Views/ExerciseDetailView.swift",
+        "action": "create",
+        "content": "import SwiftUI\n\nstruct ExerciseDetailView: View {\n    var exercise: Exercise\n    \n    var body: some View {\n        ScrollView {\n            VStack(alignment: .leading) {\n                Text(exercise.name)\n                    .font(.largeTitle)\n                    .padding()\n                Text(exercise.description)\n                    .padding()\n                ForEach(exercise.instructions, id: \\.\u007fself) { instruction in\n                    Text(instruction)\n                        .padding(.horizontal)\n                }\n            }\n        }\n        .navigationTitle(exercise.name)\n    }\n}\n\nstruct ExerciseDetailView_Previews: PreviewProvider {\n    static var previews: some View {\n        let exercise = Exercise(id: UUID(), name: \"Sample Exercise\", description: \"This is a sample exercise.\", instructions: [\"Step 1\", \"Step 2\"], duration: nil, repetitions: nil, sets: nil, difficulty: .medium, category: .strength, imageURL: nil, videoURL: nil)\n        ExerciseDetailView(exercise: exercise)\n    }\n}\n"
+>>>>>>> 1b097101382f0b503d6e8275b44f57c25f1ea248
       }
     ]
   }
