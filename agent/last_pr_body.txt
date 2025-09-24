@@ -1,0 +1,20 @@
+### 🍎 iOS Agent Task
+
+**Title:** create-exercise-tracking-module
+
+Implements core exercise tracking functionality including views, models, and services for the PT-Helper app.
+
+**Changes:** 6 file(s)
+
+**iOS Context:**
+- Project: PT-Helper
+- SwiftUI: ✅
+- Build Status: ✅ Can Build
+
+**Files Modified:**
+- Create: `ios/PT-Helper/Models/Exercise.swift`
+- Create: `ios/PT-Helper/Models/ExerciseSession.swift`
+- Create: `ios/PT-Helper/Services/ExerciseService.swift`
+- Create: `ios/PT-Helper/ViewModels/ExerciseViewModel.swift`
+- Create: `ios/PT-Helper/Views/ExerciseListView.swift`
+- Create: `ios/PT-Helper/Views/ExerciseDetailView.swift`
