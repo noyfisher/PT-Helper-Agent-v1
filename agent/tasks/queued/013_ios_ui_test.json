@@ -1,0 +1,35 @@
+{
+    "title": "iOS Profile Screen",
+    "context": {
+      "notes": [
+        "Create a new SwiftUI view for a user profile screen",
+        "Generate a ViewModel for handling profile state",
+        "Generate a model struct for Profile data"
+      ]
+    },
+    "deliverables": [
+      {
+        "path": "ios/PT-Helper/ProfileView.swift",
+        "type": "new"
+      },
+      {
+        "path": "ios/PT-Helper/ProfileViewModel.swift",
+        "type": "new"
+      },
+      {
+        "path": "ios/PT-Helper/Profile.swift",
+        "type": "new"
+      },
+      {
+        "path": "docs/ProfileFeature.md",
+        "type": "new"
+      }
+    ],
+    "acceptance": [
+      "ProfileView.swift exists and defines a SwiftUI view struct ProfileView",
+      "ProfileViewModel.swift exists and defines class ProfileViewModel: ObservableObject",
+      "Profile.swift exists and defines struct Profile: Identifiable, Codable with properties id: UUID, name: String, age: Int",
+      "ProfileFeature.md exists with basic usage instructions"
+    ]
+  }
+  
