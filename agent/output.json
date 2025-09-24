@@ -1,0 +1,143 @@
+{
+  "task": {
+    "type": "ios_feature",
+    "mode": "pr",
+    "title": "Add Exercise Timer Feature",
+    "description": "Create a simple exercise timer component for the PT-Helper app",
+    "requirements": [
+      "SwiftUI timer view with start/stop/reset functionality",
+      "Simple data model for timer state",
+      "Clean, accessible interface for PT users"
+    ],
+    "deliverables": [
+      {
+        "path": "ios/PT-Helper/PT-Helper/Views/TimerView.swift",
+        "type": "new",
+        "description": "SwiftUI timer interface"
+      },
+      {
+        "path": "ios/PT-Helper/PT-Helper/Models/Timer.swift",
+        "type": "new",
+        "description": "Timer data model"
+      },
+      {
+        "path": "ios/PT-Helper/PT-Helper/ViewModels/TimerViewModel.swift",
+        "type": "new",
+        "description": "Timer business logic"
+      }
+    ],
+    "properties": {
+      "timer_properties": {
+        "duration": "Int",
+        "isRunning": "Bool",
+        "timeRemaining": "Int"
+      }
+    },
+    "context": {
+      "target_ios_version": "15.0+",
+      "ui_framework": "SwiftUI",
+      "architecture": "MVVM"
+    }
+  },
+  "ios_context": {
+    "has_ios_project": true,
+    "bundle_identifier": "com.yourorg.PT-Helper",
+    "target_name": "PT-Helper",
+    "swift_files": [
+      "ios/PT-Helper/ViewModels/ExerciseViewModel.swift",
+      "ios/PT-Helper/Models/Exercise.swift",
+      "ios/PT-Helper/Models/ExerciseSession.swift",
+      "ios/PT-Helper/PT-HelperTests/PT_HelperTests.swift",
+      "ios/PT-Helper/Views/ExerciseDetailView.swift",
+      "ios/PT-Helper/Views/ExerciseListView.swift",
+      "ios/PT-Helper/PT-HelperUITests/PT_HelperUITestsLaunchTests.swift",
+      "ios/PT-Helper/PT-HelperUITests/PT_HelperUITests.swift",
+      "ios/PT-Helper/PT-Helper/LoginView.swift",
+      "ios/PT-Helper/PT-Helper/RootView.swift",
+      "ios/PT-Helper/PT-Helper/PT_HelperApp.swift",
+      "ios/PT-Helper/PT-Helper/ContentView.swift",
+      "ios/PT-Helper/Services/ExerciseService.swift"
+    ],
+    "storyboards": [],
+    "has_swiftui": true,
+    "dependencies": {
+      "cocoapods": [],
+      "spm": []
+    },
+    "project_path": "ios/PT-Helper/PT-Helper.xcodeproj",
+    "ios_structure": {
+      "LAYOUT.md": "file",
+      "PT-Helper/": {
+        "GoogleService-Info.plist": "file",
+        "Models/": {
+          "Exercise.swift": "file",
+          "ExerciseSession.swift": "file"
+        },
+        "PT-Helper/": {
+          "Assets.xcassets/": {
+            "AccentColor.colorset/": {},
+            "AppIcon.appiconset/": {},
+            "Contents.json": "file"
+          },
+          "ContentView.swift": "file",
+          "LoginView.swift": "file",
+          "PT-Helper.entitlements": "file",
+          "PT_HelperApp.swift": "file",
+          "Preview Content/": {
+            "Preview Assets.xcassets/": {}
+          },
+          "RootView.swift": "file"
+        },
+        "PT-Helper.xcodeproj/": {
+          "project.pbxproj": "file",
+          "project.xcworkspace/": {
+            "contents.xcworkspacedata": "file",
+            "xcshareddata/": {},
+            "xcuserdata/": {}
+          },
+          "xcuserdata/": {
+            "noyfisher.xcuserdatad/": {}
+          }
+        },
+        "PT-HelperTests/": {
+          "PT_HelperTests.swift": "file"
+        },
+        "PT-HelperUITests/": {
+          "PT_HelperUITests.swift": "file",
+          "PT_HelperUITestsLaunchTests.swift": "file"
+        },
+        "Services/": {
+          "ExerciseService.swift": "file"
+        },
+        "ViewModels/": {
+          "ExerciseViewModel.swift": "file"
+        },
+        "Views/": {
+          "ExerciseDetailView.swift": "file",
+          "ExerciseListView.swift": "file"
+        }
+      }
+    }
+  },
+  "model_result": {
+    "title": "add-exercise-timer-feature",
+    "summary": "Introduces a new exercise timer feature with a SwiftUI interface, a timer data model, and a view model for business logic.",
+    "changes": [
+      {
+        "path": "ios/PT-Helper/PT-Helper/Views/TimerView.swift",
+        "action": "create",
+        "content": "import SwiftUI\n\nstruct TimerView: View {\n    @ObservedObject var viewModel: TimerViewModel\n\n    var body: some View {\n        VStack {\n            Text(viewModel.timeString)\n                .font(.largeTitle)\n                .padding()\n            HStack {\n                Button(action: { viewModel.start() }) {\n                    Text(\"Start\")\n                }\n                Button(action: { viewModel.stop() }) {\n                    Text(\"Stop\")\n                }\n                Button(action: { viewModel.reset() }) {\n                    Text(\"Reset\")\n                }\n            }\n        }\n    }\n}\n\nstruct TimerView_Previews: PreviewProvider {\n    static var previews: some View {\n        TimerView(viewModel: TimerViewModel())\n    }\n}"
+      },
+      {
+        "path": "ios/PT-Helper/PT-Helper/Models/Timer.swift",
+        "action": "create",
+        "content": "import Foundation\n\nclass Timer {\n    var duration: Int\n    var isRunning: Bool\n    var timeRemaining: Int\n\n    init(duration: Int) {\n        self.duration = duration\n        self.isRunning = false\n        self.timeRemaining = duration\n    }\n}"
+      },
+      {
+        "path": "ios/PT-Helper/PT-Helper/ViewModels/TimerViewModel.swift",
+        "action": "create",
+        "content": "import Foundation\nimport Combine\n\nclass TimerViewModel: ObservableObject {\n    @Published var timer: Timer\n    private var timerSubscription: AnyCancellable?\n\n    var timeString: String {\n        let minutes = timer.timeRemaining / 60\n        let seconds = timer.timeRemaining % 60\n        return String(format: \"%02d:%02d\", minutes, seconds)\n    }\n\n    init() {\n        self.timer = Timer(duration: 300) // 5 minutes\n    }\n\n    func start() {\n        guard !timer.isRunning else { return }\n        timer.isRunning = true\n        timerSubscription = Timer.publish(every: 1, on: .main, in: .common)\n            .autoconnect()\n            .sink { [weak self] _ in\n                self?.updateTimer()\n            }\n    }\n\n    func stop() {\n        timer.isRunning = false\n        timerSubscription?.cancel()\n    }\n\n    func reset() {\n        stop()\n        timer.timeRemaining = timer.duration\n    }\n\n    private func updateTimer() {\n        guard timer.isRunning else { return }\n        if timer.timeRemaining > 0 {\n            timer.timeRemaining -= 1\n        } else {\n            stop()\n        }\n    }\n}"
+      }
+    ]
+  }
+}

@@ -1,0 +1,17 @@
+### 🍎 iOS Agent Task
+
+**Title:** add-exercise-timer-feature
+
+Introduces a new exercise timer feature with a SwiftUI interface, a timer data model, and a view model for business logic.
+
+**Changes:** 3 file(s)
+
+**iOS Context:**
+- Project: PT-Helper
+- SwiftUI: ✅
+- Build Status: ✅ Can Build
+
+**Files Modified:**
+- Create: `ios/PT-Helper/PT-Helper/Views/TimerView.swift`
+- Create: `ios/PT-Helper/PT-Helper/Models/Timer.swift`
+- Create: `ios/PT-Helper/PT-Helper/ViewModels/TimerViewModel.swift`
