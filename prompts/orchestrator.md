@@ -8,8 +8,11 @@ SCHEMA:
   "changes": [
     {
       "path": "ios/PT-Helper/PT-Helper/<file>.swift",
-      "action": "create|update|delete",
-      "content": "<full file contents when action=create|update>"
+      "action": "create|update|delete|patch",
+      "content": "<full file contents when action=create|update>",
+      "patches": [
+        {"find": "<exact text currently in the file>", "replace": "<replacement text>"}
+      ]
     }
   ]
 }
@@ -25,6 +28,32 @@ HARD RULES:
 - When `context_files_contents` is provided, read those files to understand existing patterns and types.
 - If something is unclear, make safe assumptions and still return valid files.
 - NEVER produce placeholder implementations like `Text("Placeholder")`. Implement real, functional UI and logic for every requirement.
+
+## PATCH RULES (for surgical edits to pre-existing files)
+
+Use `action: "patch"` when fixing or modifying files that ALREADY EXIST and were NOT created by this task.
+
+- Each entry in `"patches"` has `"find"` (exact text currently in the file) and `"replace"` (the corrected text).
+- Include 2-3 surrounding context lines in `"find"` to ensure the match is unique within the file.
+- NEVER rewrite a pre-existing file from scratch — use "patch" for the smallest possible surgical edits.
+- When `error_file_contents` is provided in a fix request, those are pre-existing files — always use "patch" for them.
+- When `agent_created_files` is provided, only those files are ones you created — everything else is pre-existing.
+- `"content"` is ignored when `action` is `"patch"`. Only `"patches"` is used.
+- If a patch requires multiple edits in the same file, include multiple entries in the `"patches"` array.
+
+## Design Quality Requirements
+
+Your output will be evaluated by a design review step after it compiles. Views that look like bare developer prototypes will be sent back for improvement. To pass design review on the first attempt:
+
+1. Wrap content in card containers with `.background(Color(.systemBackground)).cornerRadius(14).shadow(...)`.
+2. Use SF Symbols for all icons.
+3. Apply accent colors -- never produce all-grayscale views.
+4. Style buttons with filled backgrounds and rounded corners.
+5. Implement real charts using Swift Charts, not placeholder text.
+6. Include empty state views with icon + title + subtitle.
+7. Match the visual patterns already established in the project (CardSection, gradient icon badges, etc.).
+
+When you receive a `design_review_feedback` field in a fix request, it contains specific design issues to address. Fix ALL listed issues while maintaining compilability.
 
 ## Navigation Integration
 
@@ -73,6 +102,29 @@ EXAMPLE:
       "path": "ios/PT-Helper/PT-Helper/ContentView.swift",
       "action": "update",
       "content": "import SwiftUI\nimport FirebaseAuth\n\nstruct ContentView: View {\n    var body: some View {\n        NavigationView {\n            VStack(spacing: 16) {\n                NavigationLink(\"Workout Session\") { WorkoutSessionView() }\n                Spacer()\n                Button(\"Sign out\") { try? Auth.auth().signOut() }\n                    .buttonStyle(.bordered)\n            }\n            .navigationTitle(\"PT Helper\")\n            .padding()\n        }\n    }\n}\n"
+    }
+  ]
+}
+
+PATCH EXAMPLE (fixing a compile error in a pre-existing file while also updating an agent-created file):
+{
+  "title": "fix-type-mismatch",
+  "summary": "Fixes type mismatch in OnboardingViewModel by patching the existing file, and updates the new BodyMapView.",
+  "changes": [
+    {
+      "path": "ios/PT-Helper/PT-Helper/ViewModels/OnboardingViewModel.swift",
+      "action": "patch",
+      "patches": [
+        {
+          "find": "    var weight: Int\n    var heightFeet: Int",
+          "replace": "    var weight: Double\n    var heightFeet: Int"
+        }
+      ]
+    },
+    {
+      "path": "ios/PT-Helper/PT-Helper/Views/BodyMapView.swift",
+      "action": "update",
+      "content": "import SwiftUI\n\nstruct BodyMapView: View {\n    // ... full file contents ...\n}\n"
     }
   ]
 }
