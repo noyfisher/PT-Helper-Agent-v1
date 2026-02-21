@@ -5,10 +5,11 @@ struct ProfileReviewStepView: View {
     var onComplete: (() -> Void)? = nil
     @State private var isSaving = false
     @State private var showSuccess = false
+    @State private var showError = false
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 16) {
+            VStack(spacing: AppSpacing.lg) {
                 // Basic info
                 ReviewCard(title: "Personal Info", icon: "person.fill", color: .blue) {
                     ReviewRow(label: "Name", value: "\(viewModel.userProfile.firstName) \(viewModel.userProfile.lastName)")
@@ -60,9 +61,24 @@ struct ProfileReviewStepView: View {
                     }
                 }
 
+                // Error message
+                if showError {
+                    HStack(spacing: AppSpacing.sm) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundColor(AppColors.warning)
+                        Text("Failed to save profile. Please try again.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(AppSpacing.md)
+                    .background(Color.orange.opacity(0.1))
+                    .cornerRadius(AppCorners.small)
+                }
+
                 // Submit button
                 Button(action: {
                     isSaving = true
+                    showError = false
                     viewModel.saveProfile { success in
                         isSaving = false
                         if success {
@@ -70,6 +86,8 @@ struct ProfileReviewStepView: View {
                             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                                 onComplete?()
                             }
+                        } else {
+                            showError = true
                         }
                     }
                 }) {
@@ -89,15 +107,15 @@ struct ProfileReviewStepView: View {
                     .font(.body.weight(.semibold))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
+                    .padding(.vertical, AppSpacing.lg)
                     .background(showSuccess ? Color.green.opacity(0.8) : Color.green)
-                    .cornerRadius(14)
+                    .cornerRadius(AppCorners.card)
                 }
                 .disabled(isSaving || showSuccess)
-                .padding(.top, 8)
+                .padding(.top, AppSpacing.sm)
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
+            .padding(.horizontal, AppSpacing.xl)
+            .padding(.vertical, AppSpacing.md)
         }
     }
 }
@@ -109,14 +127,14 @@ struct ReviewCard<Content: View>: View {
     @ViewBuilder let content: Content
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 8) {
+        VStack(alignment: .leading, spacing: AppSpacing.sm) {
+            HStack(spacing: AppSpacing.sm) {
                 Image(systemName: icon)
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(color)
                     .frame(width: 26, height: 26)
                     .background(color.opacity(0.15))
-                    .cornerRadius(6)
+                    .cornerRadius(7)
                 Text(title)
                     .font(.subheadline.weight(.semibold))
                     .foregroundColor(.secondary)
@@ -124,10 +142,7 @@ struct ReviewCard<Content: View>: View {
             Divider()
             content
         }
-        .padding(16)
-        .background(Color(.systemBackground))
-        .cornerRadius(14)
-        .shadow(color: .black.opacity(0.04), radius: 8, y: 2)
+        .cardStyle()
     }
 }
 
@@ -150,4 +165,3 @@ struct ReviewRow: View {
         }
     }
 }
-

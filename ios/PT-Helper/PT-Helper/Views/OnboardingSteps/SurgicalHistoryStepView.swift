@@ -10,10 +10,10 @@ struct SurgicalHistoryStepView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 16) {
+            VStack(spacing: AppSpacing.lg) {
                 // Toggle card
                 HStack {
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: AppSpacing.xs) {
                         Text("Have you had any surgeries?")
                             .font(.body.weight(.medium))
                         Text(viewModel.userProfile.surgeries.isEmpty ? "Tap to add" : "\(viewModel.userProfile.surgeries.count) recorded")
@@ -25,14 +25,14 @@ struct SurgicalHistoryStepView: View {
                         .font(.title2)
                         .foregroundColor(.orange)
                 }
-                .padding(16)
-                .background(Color(.systemBackground))
-                .cornerRadius(14)
+                .padding(AppSpacing.lg)
+                .background(AppColors.cardBackground)
+                .cornerRadius(AppCorners.card)
                 .shadow(color: .black.opacity(0.04), radius: 8, y: 2)
 
                 // Surgery entries
                 ForEach(Array(viewModel.userProfile.surgeries.enumerated()), id: \.element.id) { index, surgery in
-                    VStack(spacing: 10) {
+                    VStack(spacing: AppSpacing.sm) {
                         HStack {
                             Text("Surgery \(index + 1)")
                                 .font(.caption.weight(.semibold))
@@ -68,13 +68,13 @@ struct SurgicalHistoryStepView: View {
                             .pickerStyle(.menu)
                             .tint(.orange)
                         }
-                        .padding(12)
-                        .background(Color(.systemGray6))
-                        .cornerRadius(10)
+                        .padding(AppSpacing.md)
+                        .background(AppColors.inputBackground)
+                        .cornerRadius(AppCorners.medium)
                     }
-                    .padding(16)
-                    .background(Color(.systemBackground))
-                    .cornerRadius(14)
+                    .padding(AppSpacing.lg)
+                    .background(AppColors.cardBackground)
+                    .cornerRadius(AppCorners.card)
                     .shadow(color: .black.opacity(0.04), radius: 8, y: 2)
                 }
 
@@ -90,13 +90,13 @@ struct SurgicalHistoryStepView: View {
                     .font(.body.weight(.medium))
                     .foregroundColor(.orange)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
+                    .padding(.vertical, AppSpacing.lg)
                     .background(Color.orange.opacity(0.1))
-                    .cornerRadius(12)
+                    .cornerRadius(AppCorners.medium)
                 }
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
+            .padding(.horizontal, AppSpacing.xl)
+            .padding(.vertical, AppSpacing.md)
         }
         .scrollDismissesKeyboard(.interactively)
         .onTapGesture {

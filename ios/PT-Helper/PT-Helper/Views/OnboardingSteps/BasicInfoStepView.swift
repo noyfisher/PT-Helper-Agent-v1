@@ -6,9 +6,9 @@ struct BasicInfoStepView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 16) {
+            VStack(spacing: AppSpacing.lg) {
                 CardSection(icon: "person.fill", color: .blue, title: "Full Name") {
-                    VStack(spacing: 10) {
+                    VStack(spacing: AppSpacing.sm) {
                         StyledTextField(placeholder: "First Name", text: $viewModel.userProfile.firstName)
                         StyledTextField(placeholder: "Last Name", text: $viewModel.userProfile.lastName)
                     }
@@ -24,23 +24,23 @@ struct BasicInfoStepView: View {
                 }
 
                 CardSection(icon: "figure.stand", color: .purple, title: "Sex") {
-                    HStack(spacing: 10) {
+                    HStack(spacing: AppSpacing.sm) {
                         ForEach(["Male", "Female", "Other"], id: \.self) { option in
                             Button(action: { viewModel.userProfile.sex = option }) {
                                 Text(option)
                                     .font(.subheadline.weight(.medium))
                                     .foregroundColor(viewModel.userProfile.sex == option ? .white : .primary)
                                     .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 12)
-                                    .background(viewModel.userProfile.sex == option ? Color.purple : Color(.systemGray5))
-                                    .cornerRadius(10)
+                                    .padding(.vertical, AppSpacing.md)
+                                    .background(viewModel.userProfile.sex == option ? Color.purple : AppColors.subtleBorder)
+                                    .cornerRadius(AppCorners.medium)
                             }
                         }
                     }
                 }
 
                 CardSection(icon: "ruler", color: .green, title: "Height") {
-                    HStack(spacing: 12) {
+                    HStack(spacing: AppSpacing.md) {
                         Picker("Feet", selection: $viewModel.userProfile.heightFeet) {
                             ForEach(3..<8) { Text("\($0) ft").tag($0) }
                         }
@@ -64,9 +64,9 @@ struct BasicInfoStepView: View {
                         TextField("Enter weight", text: $weightText)
                             .keyboardType(.decimalPad)
                             .font(.title3.weight(.medium))
-                            .padding(12)
-                            .background(Color(.systemGray6))
-                            .cornerRadius(10)
+                            .padding(AppSpacing.md)
+                            .background(AppColors.inputBackground)
+                            .cornerRadius(AppCorners.medium)
                             .onChange(of: weightText) { newValue in
                                 if let val = Double(newValue) {
                                     viewModel.userProfile.weight = val
@@ -78,8 +78,8 @@ struct BasicInfoStepView: View {
                     }
                 }
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
+            .padding(.horizontal, AppSpacing.xl)
+            .padding(.vertical, AppSpacing.md)
         }
         .scrollDismissesKeyboard(.interactively)
         .onTapGesture {
@@ -93,44 +93,4 @@ struct BasicInfoStepView: View {
     }
 }
 
-// MARK: - Reusable Components
-
-struct CardSection<Content: View>: View {
-    let icon: String
-    let color: Color
-    let title: String
-    @ViewBuilder let content: Content
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 8) {
-                Image(systemName: icon)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(color)
-                    .frame(width: 28, height: 28)
-                    .background(color.opacity(0.15))
-                    .cornerRadius(7)
-                Text(title)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundColor(.secondary)
-            }
-            content
-        }
-        .padding(16)
-        .background(Color(.systemBackground))
-        .cornerRadius(14)
-        .shadow(color: .black.opacity(0.04), radius: 8, y: 2)
-    }
-}
-
-struct StyledTextField: View {
-    let placeholder: String
-    @Binding var text: String
-
-    var body: some View {
-        TextField(placeholder, text: $text)
-            .padding(12)
-            .background(Color(.systemGray6))
-            .cornerRadius(10)
-    }
-}
+// CardSection and StyledTextField are defined in DesignSystem.swift

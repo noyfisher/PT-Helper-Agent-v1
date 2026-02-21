@@ -5,10 +5,10 @@ struct InjuryHistoryStepView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 16) {
+            VStack(spacing: AppSpacing.lg) {
                 // Header card
                 HStack {
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: AppSpacing.xs) {
                         Text("Any current or past injuries?")
                             .font(.body.weight(.medium))
                         Text(viewModel.userProfile.injuries.isEmpty ? "Tap to add" : "\(viewModel.userProfile.injuries.count) recorded")
@@ -20,14 +20,14 @@ struct InjuryHistoryStepView: View {
                         .font(.title2)
                         .foregroundColor(.red)
                 }
-                .padding(16)
-                .background(Color(.systemBackground))
-                .cornerRadius(14)
+                .padding(AppSpacing.lg)
+                .background(AppColors.cardBackground)
+                .cornerRadius(AppCorners.card)
                 .shadow(color: .black.opacity(0.04), radius: 8, y: 2)
 
                 // Injury entries
                 ForEach(Array(viewModel.userProfile.injuries.enumerated()), id: \.element.id) { index, injury in
-                    VStack(spacing: 10) {
+                    VStack(spacing: AppSpacing.sm) {
                         HStack {
                             Text("Injury \(index + 1)")
                                 .font(.caption.weight(.semibold))
@@ -52,7 +52,7 @@ struct InjuryHistoryStepView: View {
                         ))
 
                         // Current / Past toggle
-                        HStack(spacing: 10) {
+                        HStack(spacing: AppSpacing.sm) {
                             let isCurrent = viewModel.userProfile.injuries[safe: index]?.isCurrent ?? false
                             ForEach(["Current", "Past"], id: \.self) { label in
                                 let selected = (label == "Current") == isCurrent
@@ -65,16 +65,16 @@ struct InjuryHistoryStepView: View {
                                         .font(.subheadline.weight(.medium))
                                         .foregroundColor(selected ? .white : .primary)
                                         .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 10)
-                                        .background(selected ? Color.red.opacity(0.8) : Color(.systemGray5))
-                                        .cornerRadius(8)
+                                        .padding(.vertical, AppSpacing.sm)
+                                        .background(selected ? Color.red.opacity(0.8) : AppColors.subtleBorder)
+                                        .cornerRadius(AppCorners.small)
                                 }
                             }
                         }
                     }
-                    .padding(16)
-                    .background(Color(.systemBackground))
-                    .cornerRadius(14)
+                    .padding(AppSpacing.lg)
+                    .background(AppColors.cardBackground)
+                    .cornerRadius(AppCorners.card)
                     .shadow(color: .black.opacity(0.04), radius: 8, y: 2)
                 }
 
@@ -89,13 +89,13 @@ struct InjuryHistoryStepView: View {
                     .font(.body.weight(.medium))
                     .foregroundColor(.red)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
+                    .padding(.vertical, AppSpacing.lg)
                     .background(Color.red.opacity(0.1))
-                    .cornerRadius(12)
+                    .cornerRadius(AppCorners.medium)
                 }
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
+            .padding(.horizontal, AppSpacing.xl)
+            .padding(.vertical, AppSpacing.md)
         }
         .scrollDismissesKeyboard(.interactively)
         .onTapGesture {

@@ -13,17 +13,17 @@ struct ActivityLevelStepView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 12) {
+            VStack(spacing: AppSpacing.md) {
                 ForEach(levels, id: \.0) { level, icon, subtitle in
                     let isSelected = viewModel.userProfile.activityLevel == level
                     Button(action: { viewModel.userProfile.activityLevel = level }) {
-                        HStack(spacing: 14) {
+                        HStack(spacing: AppSpacing.lg) {
                             Image(systemName: icon)
                                 .font(.title3)
                                 .foregroundColor(isSelected ? .white : .blue)
                                 .frame(width: 44, height: 44)
                                 .background(isSelected ? Color.blue : Color.blue.opacity(0.1))
-                                .cornerRadius(12)
+                                .cornerRadius(AppCorners.medium)
 
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(level)
@@ -42,12 +42,12 @@ struct ActivityLevelStepView: View {
                                     .font(.title3)
                             }
                         }
-                        .padding(14)
-                        .background(isSelected ? Color.blue : Color(.systemBackground))
-                        .cornerRadius(14)
+                        .padding(AppSpacing.lg)
+                        .background(isSelected ? Color.blue : AppColors.cardBackground)
+                        .cornerRadius(AppCorners.card)
                         .shadow(color: .black.opacity(isSelected ? 0 : 0.04), radius: 8, y: 2)
                         .overlay(
-                            RoundedRectangle(cornerRadius: 14)
+                            RoundedRectangle(cornerRadius: AppCorners.card)
                                 .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 2)
                         )
                     }
@@ -55,14 +55,14 @@ struct ActivityLevelStepView: View {
 
                 CardSection(icon: "sportscourt", color: .green, title: "Primary Sport or Activity") {
                     TextField("e.g. Basketball, Running, Yoga...", text: $viewModel.userProfile.primarySport.bound)
-                        .padding(12)
-                        .background(Color(.systemGray6))
-                        .cornerRadius(10)
+                        .padding(AppSpacing.md)
+                        .background(AppColors.inputBackground)
+                        .cornerRadius(AppCorners.medium)
                 }
-                .padding(.top, 8)
+                .padding(.top, AppSpacing.sm)
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
+            .padding(.horizontal, AppSpacing.xl)
+            .padding(.vertical, AppSpacing.md)
         }
         .scrollDismissesKeyboard(.interactively)
         .onTapGesture {

@@ -22,11 +22,10 @@ struct ExerciseDetailView: View {
     }
 
     private var demonstrationIcon: some View {
-        Image(systemName: exercise.demonstrationIcon)
-            .font(.system(size: 100))
-            .foregroundColor(.blue)
-            .symbolEffect(.bounce)
-            .padding()
+        ExerciseIllustrationView(
+            iconName: exercise.demonstrationIcon,
+            difficulty: exercise.difficulty
+        )
     }
 
     private var exerciseInfo: some View {

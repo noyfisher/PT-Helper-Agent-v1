@@ -1,0 +1,24 @@
+# API Keys — never commit
+**/APIConfig.swift
+
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+*.xcscmblueprint
+xcuserdata/
+
+# macOS
+.DS_Store
+*.swp
+*~
+
+# CocoaPods
+Pods/
+
+# SPM
+.build/
+Package.resolved
+
+# Firebase
+GoogleService-Info.plist

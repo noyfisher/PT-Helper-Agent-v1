@@ -23,38 +23,118 @@ class OnboardingViewModel: ObservableObject {
     private let db = Firestore.firestore()
 
     func saveProfile(completion: @escaping (Bool) -> Void) {
-        guard let uid = Auth.auth().currentUser?.uid else { return }
-        do {
-            try db.collection("users").document(uid).collection("profile").document("health").setData(from: userProfile) { error in
-                if let error = error {
-                    print("Error saving profile: \(error.localizedDescription)")
-                    completion(false)
-                } else {
-                    completion(true)
+        guard let uid = Auth.auth().currentUser?.uid else {
+            print("Error saving profile: no authenticated user")
+            completion(false)
+            return
+        }
+        userProfile.userId = uid
+
+        // Build dictionary manually to avoid Codable encoding issues
+        var profileData: [String: Any] = [
+            "userId": uid,
+            "firstName": userProfile.firstName,
+            "lastName": userProfile.lastName,
+            "dateOfBirth": Timestamp(date: userProfile.dateOfBirth),
+            "sex": userProfile.sex,
+            "heightFeet": userProfile.heightFeet,
+            "heightInches": userProfile.heightInches,
+            "weight": userProfile.weight,
+            "medicalConditions": userProfile.medicalConditions,
+            "surgeries": userProfile.surgeries.map { surgery -> [String: Any] in
+                [
+                    "id": surgery.id.uuidString,
+                    "name": surgery.name,
+                    "year": surgery.year
+                ]
+            },
+            "injuries": userProfile.injuries.map { injury -> [String: Any] in
+                [
+                    "id": injury.id.uuidString,
+                    "bodyArea": injury.bodyArea,
+                    "description": injury.description,
+                    "isCurrent": injury.isCurrent
+                ]
+            },
+            "activityLevel": userProfile.activityLevel
+        ]
+        if let other = userProfile.otherMedicalConditions {
+            profileData["otherMedicalConditions"] = other
+        }
+        if let sport = userProfile.primarySport {
+            profileData["primarySport"] = sport
+        }
+
+        db.collection("users").document(uid).collection("profile").document("health")
+            .setData(profileData) { error in
+                DispatchQueue.main.async {
+                    if let error = error {
+                        print("Error saving profile: \(error.localizedDescription)")
+                        completion(false)
+                    } else {
+                        completion(true)
+                    }
                 }
             }
-        } catch {
-            print("Error encoding profile: \(error.localizedDescription)")
-            completion(false)
-        }
     }
 
     func loadProfile(completion: @escaping (Bool) -> Void) {
-        guard let uid = Auth.auth().currentUser?.uid else { return }
+        guard let uid = Auth.auth().currentUser?.uid else {
+            completion(false)
+            return
+        }
         db.collection("users").document(uid).collection("profile").document("health").getDocument { snapshot, error in
-            if let error = error {
-                print("Error loading profile: \(error.localizedDescription)")
-                completion(false)
-            } else if let snapshot = snapshot, snapshot.exists {
-                do {
-                    self.userProfile = try snapshot.data(as: UserProfile.self)
+            DispatchQueue.main.async {
+                if let error = error {
+                    print("Error loading profile: \(error.localizedDescription)")
+                    completion(false)
+                } else if let snapshot = snapshot, snapshot.exists, let data = snapshot.data() {
+                    // Parse manually to match our manual save format
+                    var profile = UserProfile(
+                        userId: data["userId"] as? String ?? uid,
+                        firstName: data["firstName"] as? String ?? "",
+                        lastName: data["lastName"] as? String ?? "",
+                        dateOfBirth: (data["dateOfBirth"] as? Timestamp)?.dateValue() ?? Date(),
+                        sex: data["sex"] as? String ?? "",
+                        heightFeet: data["heightFeet"] as? Int ?? 0,
+                        heightInches: data["heightInches"] as? Int ?? 0,
+                        weight: data["weight"] as? Double ?? 0.0,
+                        medicalConditions: data["medicalConditions"] as? [String] ?? [],
+                        otherMedicalConditions: data["otherMedicalConditions"] as? String,
+                        surgeries: [],
+                        injuries: [],
+                        activityLevel: data["activityLevel"] as? String ?? "",
+                        primarySport: data["primarySport"] as? String
+                    )
+
+                    // Parse surgeries
+                    if let surgeriesData = data["surgeries"] as? [[String: Any]] {
+                        profile.surgeries = surgeriesData.map { s in
+                            UserProfile.Surgery(
+                                id: UUID(uuidString: s["id"] as? String ?? "") ?? UUID(),
+                                name: s["name"] as? String ?? "",
+                                year: s["year"] as? Int ?? 2024
+                            )
+                        }
+                    }
+
+                    // Parse injuries
+                    if let injuriesData = data["injuries"] as? [[String: Any]] {
+                        profile.injuries = injuriesData.map { i in
+                            UserProfile.Injury(
+                                id: UUID(uuidString: i["id"] as? String ?? "") ?? UUID(),
+                                bodyArea: i["bodyArea"] as? String ?? "",
+                                description: i["description"] as? String ?? "",
+                                isCurrent: i["isCurrent"] as? Bool ?? false
+                            )
+                        }
+                    }
+
+                    self.userProfile = profile
                     completion(true)
-                } catch {
-                    print("Error decoding profile: \(error.localizedDescription)")
+                } else {
                     completion(false)
                 }
-            } else {
-                completion(false)
             }
         }
     }

@@ -22,19 +22,19 @@ struct OnboardingView: View {
                         }
                     }
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 12)
+                .padding(.horizontal, AppSpacing.xl)
+                .padding(.top, AppSpacing.md)
 
                 // Step indicator header
-                VStack(spacing: 14) {
+                VStack(spacing: AppSpacing.lg) {
                     Text("Step \(viewModel.currentStep) of 6")
                         .font(.caption)
                         .fontWeight(.semibold)
                         .foregroundColor(.white)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 4)
+                        .padding(.horizontal, AppSpacing.md)
+                        .padding(.vertical, AppSpacing.xs)
                         .background(Color.blue)
-                        .cornerRadius(12)
+                        .cornerRadius(AppCorners.medium)
 
                     HStack(spacing: 6) {
                         ForEach(1...6, id: \.self) { step in
@@ -56,7 +56,7 @@ struct OnboardingView: View {
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 32)
                 }
-                .padding(.bottom, 8)
+                .padding(.bottom, AppSpacing.sm)
 
                 // Step content
                 TabView(selection: $viewModel.currentStep) {
@@ -71,41 +71,31 @@ struct OnboardingView: View {
                 .animation(.easeInOut(duration: 0.3), value: viewModel.currentStep)
 
                 // Navigation buttons
-                HStack(spacing: 12) {
+                HStack(spacing: AppSpacing.md) {
                     if viewModel.currentStep > 1 {
                         Button(action: { viewModel.previousStep() }) {
-                            HStack(spacing: 4) {
+                            HStack(spacing: AppSpacing.xs) {
                                 Image(systemName: "chevron.left")
                                     .font(.system(size: 13, weight: .bold))
                                 Text("Back")
                             }
-                            .font(.body.weight(.medium))
-                            .foregroundColor(.blue)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(Color.blue.opacity(0.1))
-                            .cornerRadius(14)
                         }
+                        .buttonStyle(SecondaryButtonStyle())
                     }
 
                     if viewModel.currentStep < 6 {
                         Button(action: { viewModel.nextStep() }) {
-                            HStack(spacing: 4) {
+                            HStack(spacing: AppSpacing.xs) {
                                 Text("Continue")
                                 Image(systemName: "chevron.right")
                                     .font(.system(size: 13, weight: .bold))
                             }
-                            .font(.body.weight(.semibold))
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(Color.blue)
-                            .cornerRadius(14)
                         }
+                        .buttonStyle(PrimaryButtonStyle())
                     }
                 }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 30)
+                .padding(.horizontal, AppSpacing.xl)
+                .padding(.bottom, AppSpacing.xxl)
             }
         }
     }

@@ -22,59 +22,83 @@ struct BodyMapView: View {
                 }
                 .padding(.top, 20)
 
+                // Front / Back picker
+                Picker("Body Side", selection: $viewModel.currentSide) {
+                    Text("Front").tag(BodySide.front)
+                    Text("Back").tag(BodySide.back)
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal, 20)
+
                 // Body map
                 GeometryReader { geometry in
                     ZStack {
-                        // Body outline
-                        Image(systemName: "figure.stand")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: geometry.size.width * 0.5)
-                            .foregroundColor(.gray.opacity(0.3))
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        // Gender-specific body silhouette
+                        BodySilhouetteView(
+                            sex: viewModel.userProfile.sex,
+                            side: viewModel.currentSide
+                        )
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                        // Tappable region hotspots
-                        ForEach(viewModel.regions) { region in
-                            let position = CGPoint(
-                                x: region.relativePosition.x * geometry.size.width,
-                                y: region.relativePosition.y * geometry.size.height
-                            )
-
-                            Button(action: {
-                                withAnimation(.spring(response: 0.3)) {
-                                    viewModel.toggleSelection(for: region)
-                                }
-                            }) {
-                                VStack(spacing: 2) {
-                                    Circle()
-                                        .fill(region.isSelected ? Color.blue : Color.blue.opacity(0.15))
-                                        .frame(width: 44, height: 44)
-                                        .overlay(
-                                            Circle()
-                                                .stroke(Color.blue, lineWidth: region.isSelected ? 0 : 1.5)
-                                        )
-                                        .overlay(
-                                            Image(systemName: region.isSelected ? "checkmark" : "plus")
-                                                .font(.system(size: 14, weight: .bold))
-                                                .foregroundColor(region.isSelected ? .white : .blue)
-                                        )
-                                        .scaleEffect(region.isSelected ? 1.1 : 1.0)
-
-                                    Text(region.name)
-                                        .font(.system(size: 8, weight: .medium))
-                                        .foregroundColor(region.isSelected ? .blue : .secondary)
-                                        .lineLimit(1)
-                                }
+                        // "Back View" label when on back side
+                        if viewModel.currentSide == .back {
+                            VStack {
+                                Text("BACK VIEW")
+                                    .font(.caption2.weight(.bold))
+                                    .foregroundColor(.secondary)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(Color(.systemGray5))
+                                    .cornerRadius(AppCorners.small)
+                                Spacer()
                             }
-                            .position(position)
-                            .accessibilityLabel(region.name)
+                        }
+
+                        // Tappable region hotspots for current side
+                        ForEach(viewModel.regionsForCurrentSide) { region in
+                            if let relPos = region.position(for: viewModel.currentSide) {
+                                let position = CGPoint(
+                                    x: relPos.x * geometry.size.width,
+                                    y: relPos.y * geometry.size.height
+                                )
+
+                                Button(action: {
+                                    withAnimation(.spring(response: 0.3)) {
+                                        viewModel.toggleSelection(for: region)
+                                    }
+                                }) {
+                                    VStack(spacing: 2) {
+                                        Circle()
+                                            .fill(region.isSelected ? Color.blue : Color.blue.opacity(0.15))
+                                            .frame(width: 44, height: 44)
+                                            .overlay(
+                                                Circle()
+                                                    .stroke(Color.blue, lineWidth: region.isSelected ? 0 : 1.5)
+                                            )
+                                            .overlay(
+                                                Image(systemName: region.isSelected ? "checkmark" : "plus")
+                                                    .font(.system(size: 14, weight: .bold))
+                                                    .foregroundColor(region.isSelected ? .white : .blue)
+                                            )
+                                            .scaleEffect(region.isSelected ? 1.1 : 1.0)
+
+                                        Text(region.name)
+                                            .font(.system(size: 8, weight: .medium))
+                                            .foregroundColor(region.isSelected ? .blue : .secondary)
+                                            .lineLimit(1)
+                                    }
+                                }
+                                .position(position)
+                                .accessibilityLabel(region.name)
+                            }
                         }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .animation(.easeInOut(duration: 0.25), value: viewModel.currentSide)
                 }
-                .padding(16)
-                .background(Color(.systemBackground))
-                .cornerRadius(16)
+                .padding(AppSpacing.lg)
+                .background(AppColors.cardBackground)
+                .cornerRadius(AppCorners.large)
                 .shadow(color: .black.opacity(0.04), radius: 8, y: 2)
                 .padding(.horizontal, 20)
 
@@ -88,9 +112,8 @@ struct BodyMapView: View {
                         if !viewModel.selectedRegions.isEmpty {
                             Button(action: { viewModel.clearAll() }) {
                                 Text("Clear All")
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundColor(.red)
                             }
+                            .buttonStyle(DestructiveButtonStyle())
                         }
                     }
 
@@ -107,14 +130,13 @@ struct BodyMapView: View {
                     }
 
                     Button(action: { navigateToPainDetail = true }) {
-                        Text("Continue")
-                            .font(.body.weight(.semibold))
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(viewModel.selectedRegions.isEmpty ? Color.gray : Color.blue)
-                            .cornerRadius(14)
+                        HStack(spacing: AppSpacing.sm) {
+                            Text("Continue")
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 13, weight: .bold))
+                        }
                     }
+                    .buttonStyle(PrimaryButtonStyle(isDisabled: viewModel.selectedRegions.isEmpty))
                     .disabled(viewModel.selectedRegions.isEmpty)
                 }
                 .padding(.horizontal, 20)

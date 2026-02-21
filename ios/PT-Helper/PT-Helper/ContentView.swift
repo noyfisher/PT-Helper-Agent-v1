@@ -6,6 +6,9 @@ struct ContentView: View {
     @StateObject private var savedPlansViewModel = SavedPlansViewModel()
     @State private var userName: String = ""
     @State private var showOnboarding = false
+    @State private var navigationId = UUID()
+    @State private var planToDelete: RehabPlan? = nil
+    @State private var showDeleteConfirmation = false
 
     var body: some View {
         NavigationView {
@@ -14,7 +17,7 @@ struct ContentView: View {
                     .ignoresSafeArea()
 
                 ScrollView {
-                    VStack(spacing: 20) {
+                    VStack(spacing: AppSpacing.xl) {
                         // Welcome header
                         VStack(spacing: 6) {
                             Text(greetingText)
@@ -26,138 +29,44 @@ struct ContentView: View {
                                 .fontWeight(.bold)
                         }
                         .frame(maxWidth: .infinity)
-                        .padding(.top, 20)
-                        .padding(.bottom, 8)
+                        .padding(.top, AppSpacing.xl)
+                        .padding(.bottom, AppSpacing.sm)
 
                         // Quick Actions header
-                        HStack(spacing: 8) {
-                            Image(systemName: "bolt.fill")
-                                .foregroundColor(.blue)
-                            Text("Quick Actions")
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundColor(.secondary)
-                            Spacer()
-                        }
-                        .padding(.horizontal, 20)
+                        SectionHeader(icon: "bolt.fill", color: .blue, title: "Quick Actions")
+                            .padding(.horizontal, AppSpacing.xl)
 
                         // Quick actions
-                        VStack(spacing: 12) {
-                            // Injury Analysis
-                            NavigationLink(destination: BodyMapView()) {
-                                HStack(spacing: 14) {
-                                    Image(systemName: "figure.run.circle")
-                                        .font(.title2)
-                                        .foregroundColor(.white)
-                                        .frame(width: 50, height: 50)
-                                        .background(
-                                            LinearGradient(
-                                                colors: [.red, .orange],
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            )
-                                        )
-                                        .cornerRadius(14)
+                        VStack(spacing: AppSpacing.md) {
+                            QuickActionCard(
+                                icon: "figure.run.circle",
+                                gradientColors: [.red, .orange],
+                                title: "Injury Analysis",
+                                subtitle: "Assess pain and get guidance",
+                                destination: BodyMapView()
+                            )
 
-                                    VStack(alignment: .leading, spacing: 3) {
-                                        Text("Injury Analysis")
-                                            .font(.body.weight(.semibold))
-                                            .foregroundColor(.primary)
-                                        Text("Assess pain and get guidance")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                    }
+                            QuickActionButton(
+                                icon: "heart.text.clipboard",
+                                gradientColors: [.blue, .cyan],
+                                title: "Update Health Info",
+                                subtitle: "Review or update your health profile",
+                                action: { showOnboarding = true }
+                            )
 
-                                    Spacer()
-
-                                    Image(systemName: "chevron.right")
-                                        .font(.system(size: 14, weight: .semibold))
-                                        .foregroundColor(.gray)
-                                }
-                                .padding(16)
-                                .background(Color(.systemBackground))
-                                .cornerRadius(16)
-                                .shadow(color: .black.opacity(0.04), radius: 8, y: 2)
-                            }
-
-                            // Update Health Info
-                            Button(action: { showOnboarding = true }) {
-                                HStack(spacing: 14) {
-                                    Image(systemName: "heart.text.clipboard")
-                                        .font(.title2)
-                                        .foregroundColor(.white)
-                                        .frame(width: 50, height: 50)
-                                        .background(
-                                            LinearGradient(
-                                                colors: [.blue, .cyan],
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            )
-                                        )
-                                        .cornerRadius(14)
-
-                                    VStack(alignment: .leading, spacing: 3) {
-                                        Text("Update Health Info")
-                                            .font(.body.weight(.semibold))
-                                            .foregroundColor(.primary)
-                                        Text("Review or update your health profile")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                    }
-
-                                    Spacer()
-
-                                    Image(systemName: "chevron.right")
-                                        .font(.system(size: 14, weight: .semibold))
-                                        .foregroundColor(.gray)
-                                }
-                                .padding(16)
-                                .background(Color(.systemBackground))
-                                .cornerRadius(16)
-                                .shadow(color: .black.opacity(0.04), radius: 8, y: 2)
-                            }
-
-                            // Recovery Notes
-                            NavigationLink(destination: NotesView()) {
-                                HStack(spacing: 14) {
-                                    Image(systemName: "note.text")
-                                        .font(.title2)
-                                        .foregroundColor(.white)
-                                        .frame(width: 50, height: 50)
-                                        .background(
-                                            LinearGradient(
-                                                colors: [.green, .mint],
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            )
-                                        )
-                                        .cornerRadius(14)
-
-                                    VStack(alignment: .leading, spacing: 3) {
-                                        Text("Recovery Notes")
-                                            .font(.body.weight(.semibold))
-                                            .foregroundColor(.primary)
-                                        Text("Track your recovery journey")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                    }
-
-                                    Spacer()
-
-                                    Image(systemName: "chevron.right")
-                                        .font(.system(size: 14, weight: .semibold))
-                                        .foregroundColor(.gray)
-                                }
-                                .padding(16)
-                                .background(Color(.systemBackground))
-                                .cornerRadius(16)
-                                .shadow(color: .black.opacity(0.04), radius: 8, y: 2)
-                            }
+                            QuickActionCard(
+                                icon: "note.text",
+                                gradientColors: [.green, .mint],
+                                title: "Recovery Notes",
+                                subtitle: "Track your recovery journey",
+                                destination: NotesView()
+                            )
                         }
-                        .padding(.horizontal, 20)
+                        .padding(.horizontal, AppSpacing.xl)
 
                         // My Rehab Plans section
                         myRehabPlansSection
-                            .padding(.horizontal, 20)
+                            .padding(.horizontal, AppSpacing.xl)
 
                         Spacer(minLength: 40)
 
@@ -167,17 +76,11 @@ struct ContentView: View {
                         }) {
                             HStack(spacing: 6) {
                                 Image(systemName: "rectangle.portrait.and.arrow.right")
-                                    .font(.system(size: 14))
                                 Text("Sign Out")
-                                    .font(.subheadline.weight(.medium))
                             }
-                            .foregroundColor(.red)
-                            .padding(.vertical, 12)
-                            .padding(.horizontal, 24)
-                            .background(Color.red.opacity(0.1))
-                            .cornerRadius(10)
                         }
-                        .padding(.bottom, 30)
+                        .buttonStyle(DestructiveButtonStyle())
+                        .padding(.bottom, AppSpacing.xxl)
                     }
                 }
             }
@@ -189,21 +92,18 @@ struct ContentView: View {
             .fullScreenCover(isPresented: $showOnboarding) {
                 OnboardingEditView()
             }
+            .onReceive(NotificationCenter.default.publisher(for: .popToRoot)) { _ in
+                navigationId = UUID()
+            }
         }
+        .id(navigationId)
     }
 
     // MARK: - My Rehab Plans
 
     private var myRehabPlansSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 8) {
-                Image(systemName: "list.clipboard.fill")
-                    .foregroundColor(.purple)
-                Text("My Rehab Plans")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundColor(.secondary)
-                Spacer()
-            }
+        VStack(alignment: .leading, spacing: AppSpacing.md) {
+            SectionHeader(icon: "list.clipboard.fill", color: .purple, title: "My Rehab Plans")
 
             if savedPlansViewModel.isLoading {
                 HStack {
@@ -211,55 +111,66 @@ struct ContentView: View {
                     ProgressView()
                     Spacer()
                 }
-                .padding(.vertical, 20)
+                .padding(.vertical, AppSpacing.xl)
             } else if savedPlansViewModel.rehabPlans.isEmpty {
-                VStack(spacing: 12) {
-                    Image(systemName: "figure.run")
-                        .font(.system(size: 36))
-                        .foregroundColor(.secondary.opacity(0.5))
-                    Text("No Rehab Plans Yet")
-                        .font(.body.weight(.semibold))
-                        .foregroundColor(.secondary)
-                    Text("Complete an injury analysis to get a personalized plan")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 24)
-                .background(Color(.systemBackground))
-                .cornerRadius(16)
-                .shadow(color: .black.opacity(0.04), radius: 8, y: 2)
+                EmptyStateView(
+                    icon: "figure.run",
+                    title: "No Rehab Plans Yet",
+                    subtitle: "Complete an injury analysis to get a personalized plan"
+                )
             } else {
                 ForEach(savedPlansViewModel.rehabPlans) { plan in
-                    NavigationLink(destination: RehabPlanView()) {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text(plan.planName)
-                                .font(.body.weight(.semibold))
-                                .foregroundColor(.primary)
-                            HStack(spacing: 6) {
-                                ForEach(plan.conditions, id: \.self) { condition in
-                                    Text(condition)
-                                        .font(.caption2)
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 3)
-                                        .background(Color.blue.opacity(0.1))
-                                        .foregroundColor(.blue)
-                                        .cornerRadius(8)
+                    NavigationLink(destination: RehabPlanView(existingPlan: plan)) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                                Text(plan.planName)
+                                    .font(.body.weight(.semibold))
+                                    .foregroundColor(.primary)
+                                HStack(spacing: 6) {
+                                    ForEach(plan.conditions, id: \.self) { condition in
+                                        Text(condition)
+                                            .font(.caption2)
+                                            .padding(.horizontal, AppSpacing.sm)
+                                            .padding(.vertical, 3)
+                                            .background(Color.blue.opacity(0.1))
+                                            .foregroundColor(.blue)
+                                            .cornerRadius(AppCorners.small)
+                                    }
                                 }
+                                Text(plan.createdDate.formatted(date: .abbreviated, time: .omitted))
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
                             }
-                            Text(plan.createdDate.formatted(date: .abbreviated, time: .omitted))
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                            Spacer()
+                            Button {
+                                planToDelete = plan
+                                showDeleteConfirmation = true
+                            } label: {
+                                Image(systemName: "trash")
+                                    .font(.body)
+                                    .foregroundColor(.red.opacity(0.7))
+                                    .padding(AppSpacing.sm)
+                            }
+                            .buttonStyle(.plain)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(16)
-                        .background(Color(.systemBackground))
-                        .cornerRadius(16)
-                        .shadow(color: .black.opacity(0.04), radius: 8, y: 2)
+                        .cardStyle()
                     }
                 }
             }
+        }
+        .alert("Delete Plan", isPresented: $showDeleteConfirmation) {
+            Button("Cancel", role: .cancel) {
+                planToDelete = nil
+            }
+            Button("Delete", role: .destructive) {
+                if let plan = planToDelete {
+                    savedPlansViewModel.deletePlan(plan)
+                    planToDelete = nil
+                }
+            }
+        } message: {
+            Text("Are you sure you want to delete \"\(planToDelete?.planName ?? "this plan")\"? This cannot be undone.")
         }
     }
 
@@ -301,13 +212,7 @@ struct OnboardingEditView: View {
                 .ignoresSafeArea()
 
             if isLoading {
-                VStack(spacing: 12) {
-                    ProgressView()
-                        .scaleEffect(1.2)
-                    Text("Loading your profile...")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
+                LoadingStateView(message: "Loading your profile...")
             } else {
                 VStack(spacing: 0) {
                     // Top bar with close button
@@ -325,20 +230,20 @@ struct OnboardingEditView: View {
                             .font(.title2)
                             .foregroundColor(.clear)
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 16)
-                    .padding(.bottom, 8)
+                    .padding(.horizontal, AppSpacing.xl)
+                    .padding(.top, AppSpacing.lg)
+                    .padding(.bottom, AppSpacing.sm)
 
                     // Step indicator
-                    VStack(spacing: 14) {
+                    VStack(spacing: AppSpacing.lg) {
                         Text("Step \(viewModel.currentStep) of 6")
                             .font(.caption)
                             .fontWeight(.semibold)
                             .foregroundColor(.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 4)
+                            .padding(.horizontal, AppSpacing.md)
+                            .padding(.vertical, AppSpacing.xs)
                             .background(Color.blue)
-                            .cornerRadius(12)
+                            .cornerRadius(AppCorners.medium)
 
                         HStack(spacing: 6) {
                             ForEach(1...6, id: \.self) { step in
@@ -377,41 +282,31 @@ struct OnboardingEditView: View {
                     .animation(.easeInOut(duration: 0.3), value: viewModel.currentStep)
 
                     // Navigation buttons
-                    HStack(spacing: 12) {
+                    HStack(spacing: AppSpacing.md) {
                         if viewModel.currentStep > 1 {
                             Button(action: { viewModel.previousStep() }) {
-                                HStack(spacing: 4) {
+                                HStack(spacing: AppSpacing.xs) {
                                     Image(systemName: "chevron.left")
                                         .font(.system(size: 13, weight: .bold))
                                     Text("Back")
                                 }
-                                .font(.body.weight(.medium))
-                                .foregroundColor(.blue)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 16)
-                                .background(Color.blue.opacity(0.1))
-                                .cornerRadius(14)
                             }
+                            .buttonStyle(SecondaryButtonStyle())
                         }
 
                         if viewModel.currentStep < 6 {
                             Button(action: { viewModel.nextStep() }) {
-                                HStack(spacing: 4) {
+                                HStack(spacing: AppSpacing.xs) {
                                     Text("Continue")
                                     Image(systemName: "chevron.right")
                                         .font(.system(size: 13, weight: .bold))
                                 }
-                                .font(.body.weight(.semibold))
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 16)
-                                .background(Color.blue)
-                                .cornerRadius(14)
                             }
+                            .buttonStyle(PrimaryButtonStyle())
                         }
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 30)
+                    .padding(.horizontal, AppSpacing.xl)
+                    .padding(.bottom, AppSpacing.xxl)
                 }
             }
         }

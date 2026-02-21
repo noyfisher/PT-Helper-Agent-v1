@@ -14,12 +14,12 @@ struct MedicalHistoryStepView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 12) {
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+            VStack(spacing: AppSpacing.md) {
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: AppSpacing.sm) {
                     ForEach(conditions, id: \.0) { condition, icon in
                         let isSelected = viewModel.userProfile.medicalConditions.contains(condition)
                         Button(action: { toggleCondition(condition) }) {
-                            HStack(spacing: 8) {
+                            HStack(spacing: AppSpacing.sm) {
                                 Image(systemName: icon)
                                     .font(.system(size: 14))
                                 Text(condition)
@@ -29,13 +29,13 @@ struct MedicalHistoryStepView: View {
                             }
                             .foregroundColor(isSelected ? .white : .primary)
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .padding(.horizontal, 8)
-                            .background(isSelected ? Color.blue : Color(.systemBackground))
-                            .cornerRadius(12)
+                            .padding(.vertical, AppSpacing.lg)
+                            .padding(.horizontal, AppSpacing.sm)
+                            .background(isSelected ? Color.blue : AppColors.cardBackground)
+                            .cornerRadius(AppCorners.medium)
                             .shadow(color: .black.opacity(isSelected ? 0 : 0.04), radius: 6, y: 2)
                             .overlay(
-                                RoundedRectangle(cornerRadius: 12)
+                                RoundedRectangle(cornerRadius: AppCorners.medium)
                                     .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 2)
                             )
                         }
@@ -44,14 +44,14 @@ struct MedicalHistoryStepView: View {
 
                 CardSection(icon: "plus.circle.fill", color: .orange, title: "Other Conditions") {
                     TextField("e.g. Epilepsy, Thyroid issues...", text: $viewModel.userProfile.otherMedicalConditions.bound)
-                        .padding(12)
-                        .background(Color(.systemGray6))
-                        .cornerRadius(10)
+                        .padding(AppSpacing.md)
+                        .background(AppColors.inputBackground)
+                        .cornerRadius(AppCorners.medium)
                 }
-                .padding(.top, 8)
+                .padding(.top, AppSpacing.sm)
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
+            .padding(.horizontal, AppSpacing.xl)
+            .padding(.vertical, AppSpacing.md)
         }
         .scrollDismissesKeyboard(.interactively)
         .onTapGesture {

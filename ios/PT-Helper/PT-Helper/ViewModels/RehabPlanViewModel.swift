@@ -3,12 +3,40 @@ import Foundation
 import FirebaseFirestore
 import FirebaseAuth
 
+// MARK: - Intermediate Decodable Types for AI Rehab Response
+
+private struct AIRehabResponse: Decodable {
+    let planName: String
+    let exercises: [AIRehabExercise]
+    let totalWeeks: Int
+    let notes: String?
+}
+
+private struct AIRehabExercise: Decodable {
+    let name: String
+    let targetArea: String
+    let description: String
+    let sets: Int
+    let reps: String
+    let restSeconds: Int
+    let difficulty: String
+    let demonstrationIcon: String
+    let tips: [String]
+    let contraindications: [String]
+}
+
+@MainActor
 class RehabPlanViewModel: ObservableObject {
     @Published var rehabPlan: RehabPlan?
     @Published var isSaving = false
     @Published var showSaveSuccess = false
+    @Published var saveError: String? = nil
+    @Published var isGenerating: Bool = false
+    @Published var generationError: String? = nil
 
-    // Exercise database organized by condition name
+    private let db = Firestore.firestore()
+
+    // Fallback exercise database organized by condition name
     private let exerciseDatabase: [String: [RehabExercise]] = [
         "Patellofemoral Pain Syndrome": [
             RehabExercise(id: UUID(), name: "Quad Sets", targetArea: "Knee", description: "Sit with your leg straight. Tighten the muscle on top of your thigh by pressing the back of your knee into the floor. Hold for 5 seconds, then relax.", sets: 3, reps: "10-15", restSeconds: 30, difficulty: .beginner, demonstrationIcon: "figure.flexibility", tips: ["Keep your leg straight.", "Press knee firmly into the floor.", "You should see your kneecap move upward."], contraindications: ["Avoid if acute knee swelling is present."]),
@@ -43,29 +71,188 @@ class RehabPlanViewModel: ObservableObject {
         ]
     ]
 
+    /// Generate a rehab plan using AI, with fallback to hardcoded database
     func generateRehabPlan(from analysisResult: AnalysisResult) {
         let conditions = analysisResult.conditions.map { $0.conditionName }
-        let exercises = conditions.flatMap { exerciseDatabase[$0] ?? [] }
 
-        // If no exercises found for exact condition names, provide general exercises
-        let finalExercises = exercises.isEmpty ? getGeneralExercises() : exercises
+        isGenerating = true
+        generationError = nil
 
-        let weeklySchedule = createWeeklySchedule(
-            for: finalExercises,
+        Task {
+            do {
+                let plan = try await generateAIRehabPlan(from: analysisResult)
+                self.rehabPlan = plan
+                self.isGenerating = false
+            } catch {
+                // Fallback to hardcoded database
+                print("AI rehab generation failed, using fallback: \(error.localizedDescription)")
+                let exercises = conditions.flatMap { exerciseDatabase[$0] ?? [] }
+                let finalExercises = exercises.isEmpty ? getGeneralExercises() : exercises
+
+                let weeklySchedule = createWeeklySchedule(
+                    for: finalExercises,
+                    activityLevel: analysisResult.userProfileSnapshot.activityLevel
+                )
+
+                self.rehabPlan = RehabPlan(
+                    id: UUID(),
+                    planName: "Personalized Rehab Plan",
+                    conditions: conditions,
+                    exercises: finalExercises,
+                    weeklySchedule: weeklySchedule,
+                    totalWeeks: 4,
+                    createdDate: Date(),
+                    notes: nil
+                )
+                self.isGenerating = false
+            }
+        }
+    }
+
+    // MARK: - AI Rehab Plan Generation
+
+    private func generateAIRehabPlan(from analysisResult: AnalysisResult) async throws -> RehabPlan {
+        let systemPrompt = buildRehabSystemPrompt()
+        let userMessage = buildRehabUserMessage(from: analysisResult)
+
+        let responseText = try await ClaudeAPIService.shared.sendMessage(
+            systemPrompt: systemPrompt,
+            userMessage: userMessage
+        )
+
+        return try parseRehabPlanResponse(
+            responseText,
+            conditions: analysisResult.conditions.map { $0.conditionName },
             activityLevel: analysisResult.userProfileSnapshot.activityLevel
         )
+    }
 
-        rehabPlan = RehabPlan(
+    private func buildRehabSystemPrompt() -> String {
+        """
+        You are a PT rehabilitation specialist. Create personalized exercise plans for musculoskeletal conditions. Educational purposes only.
+
+        RULES:
+        - Create 4-8 exercises with clear instructions, sets, reps, rest periods
+        - Match difficulty to activity level: sedentary→beginner, moderate→beginner+intermediate, active→intermediate+advanced
+        - Use SF Symbol icons: "figure.flexibility", "figure.strengthtraining.traditional", "figure.cooldown", "figure.yoga", "figure.walk", "figure.stairs", "figure.core.training"
+        - Include 2-3 form tips and 1-2 contraindications per exercise
+
+        Respond ONLY with valid JSON (no markdown):
+        {"planName":"string","exercises":[{"name":"string","targetArea":"string","description":"string","sets":number,"reps":"string","restSeconds":number,"difficulty":"beginner|intermediate|advanced","demonstrationIcon":"string","tips":["strings"],"contraindications":["strings"]}],"totalWeeks":number(4-8),"notes":"string or null"}
+        """
+    }
+
+    private func buildRehabUserMessage(from analysisResult: AnalysisResult) -> String {
+        let profile = analysisResult.userProfileSnapshot
+
+        var message = """
+        PATIENT PROFILE:
+        - Age: \(profile.age) years old
+        - Sex: \(profile.sex)
+        - Height: \(profile.heightFeet)'\(profile.heightInches)"
+        - Weight: \(Int(profile.weight)) lbs
+        - Activity Level: \(profile.activityLevel)
+        """
+
+        if let sport = profile.primarySport, !sport.isEmpty {
+            message += "\n- Primary Sport/Activity: \(sport)"
+        }
+
+        if !profile.medicalConditions.isEmpty {
+            message += "\n- Medical Conditions: \(profile.medicalConditions.joined(separator: ", "))"
+        }
+
+        if !profile.surgeries.isEmpty {
+            let surgeryList = profile.surgeries.map { "\($0.name) (\($0.year))" }.joined(separator: ", ")
+            message += "\n- Past Surgeries: \(surgeryList)"
+        }
+
+        if !profile.injuries.isEmpty {
+            let injuryList = profile.injuries.map { injury in
+                let status = injury.isCurrent ? "current" : "past"
+                return "\(injury.bodyArea): \(injury.description) (\(status))"
+            }.joined(separator: "; ")
+            message += "\n- Injuries: \(injuryList)"
+        }
+
+        message += "\n\nIDENTIFIED CONDITIONS:\n"
+
+        for condition in analysisResult.conditions {
+            message += "- \(condition.conditionName) (Confidence: \(Int(condition.confidence))%)\n"
+            message += "  Explanation: \(condition.explanation)\n"
+        }
+
+        message += "\nPlease create a personalized rehabilitation exercise plan for this patient."
+
+        return message
+    }
+
+    private func parseRehabPlanResponse(_ text: String, conditions: [String], activityLevel: String) throws -> RehabPlan {
+        guard let jsonData = text.data(using: .utf8) else {
+            throw ClaudeAPIError.decodingError(NSError(domain: "RehabPlan", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid response encoding"]))
+        }
+
+        let aiResponse: AIRehabResponse
+        do {
+            aiResponse = try JSONDecoder().decode(AIRehabResponse.self, from: jsonData)
+        } catch {
+            // Fallback: extract JSON between { and }
+            if let startIndex = text.firstIndex(of: "{"),
+               let endIndex = text.lastIndex(of: "}") {
+                let jsonSubstring = String(text[startIndex...endIndex])
+                if let fallbackData = jsonSubstring.data(using: .utf8) {
+                    do {
+                        aiResponse = try JSONDecoder().decode(AIRehabResponse.self, from: fallbackData)
+                    } catch {
+                        throw ClaudeAPIError.decodingError(error)
+                    }
+                } else {
+                    throw ClaudeAPIError.decodingError(error)
+                }
+            } else {
+                throw ClaudeAPIError.decodingError(error)
+            }
+        }
+
+        // Map AI exercises to our model
+        let exercises = aiResponse.exercises.map { aiExercise in
+            let difficulty: RehabExercise.Difficulty
+            switch aiExercise.difficulty.lowercased() {
+            case "intermediate": difficulty = .intermediate
+            case "advanced": difficulty = .advanced
+            default: difficulty = .beginner
+            }
+
+            return RehabExercise(
+                id: UUID(),
+                name: aiExercise.name,
+                targetArea: aiExercise.targetArea,
+                description: aiExercise.description,
+                sets: aiExercise.sets,
+                reps: aiExercise.reps,
+                restSeconds: aiExercise.restSeconds,
+                difficulty: difficulty,
+                demonstrationIcon: aiExercise.demonstrationIcon,
+                tips: aiExercise.tips,
+                contraindications: aiExercise.contraindications
+            )
+        }
+
+        let weeklySchedule = createWeeklySchedule(for: exercises, activityLevel: activityLevel)
+
+        return RehabPlan(
             id: UUID(),
-            planName: "Personalized Rehab Plan",
+            planName: aiResponse.planName,
             conditions: conditions,
-            exercises: finalExercises,
+            exercises: exercises,
             weeklySchedule: weeklySchedule,
-            totalWeeks: 4,
+            totalWeeks: aiResponse.totalWeeks,
             createdDate: Date(),
-            notes: nil
+            notes: aiResponse.notes
         )
     }
+
+    // MARK: - Schedule & Fallback
 
     private func createWeeklySchedule(for exercises: [RehabExercise], activityLevel: String) -> [[String]] {
         let exerciseDays: Int
@@ -106,24 +293,73 @@ class RehabPlanViewModel: ObservableObject {
         ]
     }
 
+    // MARK: - Firestore
+
     func savePlanToFirestore() {
-        guard let userId = Auth.auth().currentUser?.uid, let plan = rehabPlan else { return }
+        guard let userId = Auth.auth().currentUser?.uid else {
+            saveError = "Not signed in"
+            return
+        }
+        guard let plan = rehabPlan else {
+            saveError = "No plan to save"
+            return
+        }
+
         isSaving = true
-        let db = Firestore.firestore()
-        do {
-            try db.collection("users").document(userId).collection("rehabPlans").document(plan.id.uuidString).setData(from: plan) { [weak self] error in
-                DispatchQueue.main.async {
-                    self?.isSaving = false
-                    if let error = error {
-                        print("Error saving plan: \(error)")
-                    } else {
-                        self?.showSaveSuccess = true
-                    }
-                }
+        saveError = nil
+
+        // Build exercise dictionaries safely
+        var exerciseDicts: [[String: Any]] = []
+        for exercise in plan.exercises {
+            let dict: [String: Any] = [
+                "id": exercise.id.uuidString,
+                "name": exercise.name,
+                "targetArea": exercise.targetArea,
+                "description": exercise.description,
+                "sets": exercise.sets,
+                "reps": exercise.reps,
+                "restSeconds": exercise.restSeconds,
+                "difficulty": exercise.difficulty.rawValue,
+                "demonstrationIcon": exercise.demonstrationIcon,
+                "tips": exercise.tips,
+                "contraindications": exercise.contraindications
+            ]
+            exerciseDicts.append(dict)
+        }
+
+        // Flatten weeklySchedule to avoid nested array issues with Firestore
+        // Store as a dictionary keyed by day index
+        var scheduleDicts: [String: [String]] = [:]
+        for (index, dayExercises) in plan.weeklySchedule.enumerated() {
+            if !dayExercises.isEmpty {
+                scheduleDicts["\(index)"] = dayExercises
             }
-        } catch {
-            isSaving = false
-            print("Error encoding plan: \(error)")
+        }
+
+        var planData: [String: Any] = [
+            "id": plan.id.uuidString,
+            "planName": plan.planName,
+            "conditions": plan.conditions,
+            "exercises": exerciseDicts,
+            "weeklySchedule": scheduleDicts,
+            "totalWeeks": plan.totalWeeks,
+            "createdDate": Timestamp(date: plan.createdDate)
+        ]
+        if let notes = plan.notes {
+            planData["notes"] = notes
+        }
+
+        Task {
+            do {
+                try await db.collection("users").document(userId).collection("rehabPlans")
+                    .document(plan.id.uuidString)
+                    .setData(planData)
+                self.isSaving = false
+                self.showSaveSuccess = true
+            } catch {
+                self.isSaving = false
+                self.saveError = error.localizedDescription
+            }
         }
     }
 }

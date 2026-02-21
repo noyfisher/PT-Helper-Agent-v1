@@ -68,8 +68,11 @@ struct PainAssessment: Codable, Identifiable {
 struct ConditionResult: Codable, Identifiable {
     let id: UUID
     let conditionName: String
+    let commonName: String
     let confidence: Double
     let explanation: String
+    let whatItMeans: String
+    let howToManage: String
     let isRedFlag: Bool
     let redFlagMessage: String?
     let nextSteps: [String]
