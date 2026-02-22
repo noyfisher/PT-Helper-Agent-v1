@@ -1,6 +1,3 @@
-# API Keys — never commit
-**/APIConfig.swift
-
 # Xcode
 build/
 DerivedData/
@@ -22,3 +19,8 @@ Package.resolved
 
 # Firebase
 GoogleService-Info.plist
+.firebase/
+
+# Firebase Functions
+functions/lib/
+functions/node_modules/

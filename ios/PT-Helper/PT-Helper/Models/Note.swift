@@ -10,4 +10,10 @@ struct Note: Identifiable, Codable {
         self.content = content
         self.dateCreated = Date()
     }
+
+    init(id: UUID, content: String, dateCreated: Date) {
+        self.id = id
+        self.content = content
+        self.dateCreated = dateCreated
+    }
 }

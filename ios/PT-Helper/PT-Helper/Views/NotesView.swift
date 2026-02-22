@@ -3,6 +3,8 @@ import SwiftUI
 struct NotesView: View {
     @StateObject private var viewModel = NotesViewModel()
     @FocusState private var isEditorFocused: Bool
+    @State private var noteToDelete: Note?
+    @State private var showDeleteConfirmation = false
 
     var body: some View {
         ZStack {
@@ -45,7 +47,14 @@ struct NotesView: View {
                     }
 
                     // Notes list
-                    if viewModel.notes.isEmpty {
+                    if viewModel.isLoading {
+                        HStack {
+                            Spacer()
+                            ProgressView()
+                            Spacer()
+                        }
+                        .padding(.vertical, AppSpacing.xl)
+                    } else if viewModel.notes.isEmpty {
                         EmptyStateView(
                             icon: "note.text",
                             title: "No Notes Yet",
@@ -54,7 +63,7 @@ struct NotesView: View {
                     } else {
                         SectionHeader(icon: "clock.arrow.circlepath", color: .purple, title: "Previous Notes")
 
-                        ForEach(viewModel.notes.reversed()) { note in
+                        ForEach(viewModel.notes) { note in
                             noteCard(for: note)
                         }
                     }
@@ -68,6 +77,22 @@ struct NotesView: View {
         .navigationBarTitleDisplayMode(.inline)
         .onTapGesture {
             isEditorFocused = false
+        }
+        .refreshable {
+            viewModel.fetchNotes()
+        }
+        .alert("Delete Note", isPresented: $showDeleteConfirmation) {
+            Button("Cancel", role: .cancel) {
+                noteToDelete = nil
+            }
+            Button("Delete", role: .destructive) {
+                if let note = noteToDelete {
+                    viewModel.deleteNote(note)
+                    noteToDelete = nil
+                }
+            }
+        } message: {
+            Text("Are you sure you want to delete this note? This cannot be undone.")
         }
     }
 
@@ -92,6 +117,17 @@ struct NotesView: View {
             }
 
             Spacer()
+
+            Button {
+                noteToDelete = note
+                showDeleteConfirmation = true
+            } label: {
+                Image(systemName: "trash")
+                    .font(.caption)
+                    .foregroundColor(.red.opacity(0.7))
+                    .padding(AppSpacing.sm)
+            }
+            .buttonStyle(.plain)
         }
         .cardStyle()
     }

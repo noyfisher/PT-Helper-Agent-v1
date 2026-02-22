@@ -3,6 +3,7 @@ import XCTest
 
 // MARK: - NotesViewModel Tests
 
+@MainActor
 final class NotesViewModelTests: XCTestCase {
 
     func testInitialState() {
@@ -40,9 +41,10 @@ final class NotesViewModelTests: XCTestCase {
         vm.addNote()
 
         XCTAssertEqual(vm.notes.count, 3)
-        XCTAssertEqual(vm.notes[0].content, "Note 1")
+        // Notes are inserted at front (newest first)
+        XCTAssertEqual(vm.notes[0].content, "Note 3")
         XCTAssertEqual(vm.notes[1].content, "Note 2")
-        XCTAssertEqual(vm.notes[2].content, "Note 3")
+        XCTAssertEqual(vm.notes[2].content, "Note 1")
     }
 
     func testAddNote_ClearsContentAfterAdd() {
@@ -65,6 +67,7 @@ final class NotesViewModelTests: XCTestCase {
 
 // MARK: - WorkoutViewModel Tests
 
+@MainActor
 final class WorkoutViewModelTests: XCTestCase {
 
     func testInitialState() {
@@ -94,7 +97,8 @@ final class WorkoutViewModelTests: XCTestCase {
             ))
         }
         XCTAssertEqual(vm.sessions.count, 5)
-        XCTAssertEqual(vm.sessions.last?.painLevel, 5.0)
+        // Sessions are inserted at front (newest first)
+        XCTAssertEqual(vm.sessions.first?.painLevel, 5.0)
     }
 }
 
@@ -407,14 +411,38 @@ final class RehabPlanViewModelTests: XCTestCase {
 
 final class OnboardingViewModelTests: XCTestCase {
 
+    /// Helper to fill in valid step 1 data so nextStep() can proceed
+    private func fillValidBasicInfo(_ vm: OnboardingViewModel) {
+        vm.userProfile.firstName = "Test"
+        vm.userProfile.lastName = "User"
+        vm.userProfile.sex = "Male"
+        vm.userProfile.heightFeet = 5
+        vm.userProfile.heightInches = 10
+        vm.userProfile.weight = 175
+    }
+
+    /// Helper to fill valid step 5 data
+    private func fillValidActivityLevel(_ vm: OnboardingViewModel) {
+        vm.userProfile.activityLevel = "Active"
+    }
+
     func testInitialStep() {
         let vm = OnboardingViewModel()
         XCTAssertEqual(vm.currentStep, 1)
     }
 
-    func testNextStep_AdvancesStep() {
+    func testNextStep_BlockedWithoutValidation() {
         let vm = OnboardingViewModel()
         XCTAssertEqual(vm.currentStep, 1)
+
+        // Try to advance without filling in required fields
+        vm.nextStep()
+        XCTAssertEqual(vm.currentStep, 1, "Should not advance without valid basic info")
+    }
+
+    func testNextStep_AdvancesWithValidData() {
+        let vm = OnboardingViewModel()
+        fillValidBasicInfo(vm)
 
         vm.nextStep()
         XCTAssertEqual(vm.currentStep, 2)
@@ -425,6 +453,8 @@ final class OnboardingViewModelTests: XCTestCase {
 
     func testNextStep_DoesNotExceedMax() {
         let vm = OnboardingViewModel()
+        fillValidBasicInfo(vm)
+        fillValidActivityLevel(vm)
 
         // Advance to step 6 (max)
         for _ in 1..<6 {
@@ -439,6 +469,7 @@ final class OnboardingViewModelTests: XCTestCase {
 
     func testPreviousStep_DecreasesStep() {
         let vm = OnboardingViewModel()
+        fillValidBasicInfo(vm)
         vm.nextStep()
         vm.nextStep()
         XCTAssertEqual(vm.currentStep, 3)
@@ -457,6 +488,8 @@ final class OnboardingViewModelTests: XCTestCase {
 
     func testFullStepNavigation() {
         let vm = OnboardingViewModel()
+        fillValidBasicInfo(vm)
+        fillValidActivityLevel(vm)
 
         // Walk through all steps forward
         for expectedStep in 2...6 {
@@ -469,6 +502,20 @@ final class OnboardingViewModelTests: XCTestCase {
             vm.previousStep()
             XCTAssertEqual(vm.currentStep, expectedStep)
         }
+    }
+
+    func testCanProceedFromStep1_RequiresAllFields() {
+        let vm = OnboardingViewModel()
+        XCTAssertFalse(vm.canProceedFromCurrentStep, "Empty profile should not pass validation")
+
+        vm.userProfile.firstName = "Test"
+        XCTAssertFalse(vm.canProceedFromCurrentStep, "Missing last name, sex, weight")
+
+        vm.userProfile.lastName = "User"
+        vm.userProfile.sex = "Male"
+        vm.userProfile.heightFeet = 5
+        vm.userProfile.weight = 175
+        XCTAssertTrue(vm.canProceedFromCurrentStep, "All required fields filled")
     }
 
     func testUserProfileModification() {

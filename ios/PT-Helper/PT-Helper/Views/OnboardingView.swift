@@ -92,6 +92,8 @@ struct OnboardingView: View {
                             }
                         }
                         .buttonStyle(PrimaryButtonStyle())
+                        .disabled(!viewModel.canProceedFromCurrentStep)
+                        .opacity(viewModel.canProceedFromCurrentStep ? 1.0 : 0.5)
                     }
                 }
                 .padding(.horizontal, AppSpacing.xl)

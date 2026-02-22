@@ -1,4 +1,5 @@
 import Foundation
+import FirebaseAuth
 
 // MARK: - Error Types
 
@@ -9,6 +10,7 @@ enum ClaudeAPIError: LocalizedError {
     case decodingError(Error)
     case noContent
     case rateLimited
+    case authenticationRequired
 
     var errorDescription: String? {
         switch self {
@@ -17,11 +19,17 @@ enum ClaudeAPIError: LocalizedError {
         case .networkError(let error):
             return "Network error: \(error.localizedDescription). Please check your internet connection."
         case .invalidResponse(let statusCode, let details):
-            // Parse the API error message if possible
+            // Parse Anthropic-style error: { "error": { "message": "..." } }
             if let data = details.data(using: .utf8),
                let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                let errorInfo = json["error"] as? [String: Any],
                let message = errorInfo["message"] as? String {
+                return "API error (\(statusCode)): \(message)"
+            }
+            // Parse proxy-style error: { "error": "..." }
+            if let data = details.data(using: .utf8),
+               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let message = json["error"] as? String {
                 return "API error (\(statusCode)): \(message)"
             }
             return "Server returned an error (status \(statusCode)). Please try again."
@@ -31,6 +39,8 @@ enum ClaudeAPIError: LocalizedError {
             return "The AI returned an empty response. Please try again."
         case .rateLimited:
             return "The service is busy. Please wait a moment and try again."
+        case .authenticationRequired:
+            return "Please sign in to use this feature."
         }
     }
 }
@@ -66,10 +76,22 @@ class ClaudeAPIService {
 
     private init() {}
 
-    /// Send a message to the Claude API and return the text response
+    /// Send a message to the Claude API via the Firebase proxy and return the text response
     func sendMessage(systemPrompt: String, userMessage: String) async throws -> String {
-        guard let url = URL(string: APIConfig.anthropicBaseURL) else {
+        guard let url = URL(string: APIConfig.claudeProxyURL) else {
             throw ClaudeAPIError.invalidURL
+        }
+
+        // Get Firebase Auth ID token for authentication
+        guard let currentUser = Auth.auth().currentUser else {
+            throw ClaudeAPIError.authenticationRequired
+        }
+
+        let idToken: String
+        do {
+            idToken = try await currentUser.getIDToken()
+        } catch {
+            throw ClaudeAPIError.authenticationRequired
         }
 
         // Build the request
@@ -77,12 +99,11 @@ class ClaudeAPIService {
         request.httpMethod = "POST"
         request.timeoutInterval = 90
 
-        // Set headers
-        request.setValue(APIConfig.anthropicAPIKey, forHTTPHeaderField: "x-api-key")
-        request.setValue(APIConfig.anthropicVersion, forHTTPHeaderField: "anthropic-version")
-        request.setValue("application/json", forHTTPHeaderField: "content-type")
+        // Set headers — Bearer token instead of API key
+        request.setValue("Bearer \(idToken)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        // Build the request body
+        // Build the request body (same format — proxy forwards to Anthropic)
         let requestBody = ClaudeRequest(
             model: APIConfig.anthropicModel,
             max_tokens: APIConfig.maxTokens,
@@ -112,16 +133,17 @@ class ClaudeAPIService {
         switch httpResponse.statusCode {
         case 200:
             break // Success
+        case 401:
+            throw ClaudeAPIError.authenticationRequired
         case 429:
             throw ClaudeAPIError.rateLimited
         default:
-            // Parse the error body for a useful message
             let errorBody = String(data: data, encoding: .utf8) ?? "No error details"
-            print("Claude API Error (\(httpResponse.statusCode)): \(errorBody)")
+            print("Claude Proxy Error (\(httpResponse.statusCode)): \(errorBody)")
             throw ClaudeAPIError.invalidResponse(httpResponse.statusCode, errorBody)
         }
 
-        // Decode the response
+        // Decode the response (proxy passes through Anthropic's response format)
         let claudeResponse: ClaudeResponse
         do {
             claudeResponse = try JSONDecoder().decode(ClaudeResponse.self, from: data)

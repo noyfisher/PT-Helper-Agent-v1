@@ -6,6 +6,8 @@ struct RootView: View {
     @State private var signedIn = (Auth.auth().currentUser != nil)
     @State private var profileCompleted = false
     @State private var isCheckingProfile = true
+    @State private var showError = false
+    @State private var errorMessage = ""
 
     var body: some View {
         Group {
@@ -36,6 +38,15 @@ struct RootView: View {
                 LoginView(onSignedIn: { signedIn = true })
             }
         }
+        .alert("Connection Error", isPresented: $showError) {
+            Button("Retry") {
+                isCheckingProfile = true
+                checkProfileCompletion()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text(errorMessage)
+        }
         .onAppear {
             Auth.auth().addStateDidChangeListener { _, user in
                 signedIn = (user != nil)
@@ -58,11 +69,13 @@ struct RootView: View {
         db.collection("users").document(uid).collection("profile").document("health").getDocument { snapshot, error in
             if let error = error {
                 print("Error checking profile: \(error.localizedDescription)")
-                profileCompleted = false
+                errorMessage = "We couldn't load your profile. Please check your internet connection and try again."
+                showError = true
+                isCheckingProfile = false
             } else {
                 profileCompleted = snapshot?.exists ?? false
+                isCheckingProfile = false
             }
-            isCheckingProfile = false
         }
     }
 }

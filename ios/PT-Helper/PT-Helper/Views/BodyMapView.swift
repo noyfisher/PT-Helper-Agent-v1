@@ -63,6 +63,8 @@ struct BodyMapView: View {
                                 )
 
                                 Button(action: {
+                                    let impact = UIImpactFeedbackGenerator(style: .light)
+                                    impact.impactOccurred()
                                     withAnimation(.spring(response: 0.3)) {
                                         viewModel.toggleSelection(for: region)
                                     }
@@ -89,7 +91,8 @@ struct BodyMapView: View {
                                     }
                                 }
                                 .position(position)
-                                .accessibilityLabel(region.name)
+                                .accessibilityLabel("\(region.name)\(region.isSelected ? ", selected" : "")")
+                                .accessibilityHint(region.isSelected ? "Double tap to deselect this pain area" : "Double tap to select this pain area")
                             }
                         }
                     }

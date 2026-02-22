@@ -3,14 +3,25 @@ import SwiftUI
 struct BasicInfoStepView: View {
     @ObservedObject var viewModel: OnboardingViewModel
     @State private var weightText: String = ""
+    @State private var hasInteracted = false
 
     var body: some View {
         ScrollView {
             VStack(spacing: AppSpacing.lg) {
                 CardSection(icon: "person.fill", color: .blue, title: "Full Name") {
-                    VStack(spacing: AppSpacing.sm) {
+                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
                         StyledTextField(placeholder: "First Name", text: $viewModel.userProfile.firstName)
+                        if hasInteracted && viewModel.userProfile.firstName.trimmingCharacters(in: .whitespaces).isEmpty {
+                            Text("First name is required")
+                                .font(.caption)
+                                .foregroundColor(.red)
+                        }
                         StyledTextField(placeholder: "Last Name", text: $viewModel.userProfile.lastName)
+                        if hasInteracted && viewModel.userProfile.lastName.trimmingCharacters(in: .whitespaces).isEmpty {
+                            Text("Last name is required")
+                                .font(.caption)
+                                .foregroundColor(.red)
+                        }
                     }
                 }
 
@@ -24,17 +35,24 @@ struct BasicInfoStepView: View {
                 }
 
                 CardSection(icon: "figure.stand", color: .purple, title: "Sex") {
-                    HStack(spacing: AppSpacing.sm) {
-                        ForEach(["Male", "Female", "Other"], id: \.self) { option in
-                            Button(action: { viewModel.userProfile.sex = option }) {
-                                Text(option)
-                                    .font(.subheadline.weight(.medium))
-                                    .foregroundColor(viewModel.userProfile.sex == option ? .white : .primary)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, AppSpacing.md)
-                                    .background(viewModel.userProfile.sex == option ? Color.purple : AppColors.subtleBorder)
-                                    .cornerRadius(AppCorners.medium)
+                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                        HStack(spacing: AppSpacing.sm) {
+                            ForEach(["Male", "Female", "Other"], id: \.self) { option in
+                                Button(action: { viewModel.userProfile.sex = option }) {
+                                    Text(option)
+                                        .font(.subheadline.weight(.medium))
+                                        .foregroundColor(viewModel.userProfile.sex == option ? .white : .primary)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, AppSpacing.md)
+                                        .background(viewModel.userProfile.sex == option ? Color.purple : AppColors.subtleBorder)
+                                        .cornerRadius(AppCorners.medium)
+                                }
                             }
+                        }
+                        if hasInteracted && viewModel.userProfile.sex.isEmpty {
+                            Text("Please select an option")
+                                .font(.caption)
+                                .foregroundColor(.red)
                         }
                     }
                 }
@@ -60,21 +78,30 @@ struct BasicInfoStepView: View {
                 }
 
                 CardSection(icon: "scalemass", color: .teal, title: "Weight") {
-                    HStack {
-                        TextField("Enter weight", text: $weightText)
-                            .keyboardType(.decimalPad)
-                            .font(.title3.weight(.medium))
-                            .padding(AppSpacing.md)
-                            .background(AppColors.inputBackground)
-                            .cornerRadius(AppCorners.medium)
-                            .onChange(of: weightText) { newValue in
-                                if let val = Double(newValue) {
-                                    viewModel.userProfile.weight = val
+                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                        HStack {
+                            TextField("Enter weight", text: $weightText)
+                                .keyboardType(.decimalPad)
+                                .font(.title3.weight(.medium))
+                                .padding(AppSpacing.md)
+                                .background(AppColors.inputBackground)
+                                .cornerRadius(AppCorners.medium)
+                                .onChange(of: weightText) { newValue in
+                                    if let val = Double(newValue) {
+                                        viewModel.userProfile.weight = val
+                                    } else if newValue.isEmpty {
+                                        viewModel.userProfile.weight = 0
+                                    }
                                 }
-                            }
-                        Text("lbs")
-                            .foregroundColor(.secondary)
-                            .font(.body.weight(.medium))
+                            Text("lbs")
+                                .foregroundColor(.secondary)
+                                .font(.body.weight(.medium))
+                        }
+                        if hasInteracted && (viewModel.userProfile.weight < 50 || viewModel.userProfile.weight > 500) {
+                            Text(viewModel.userProfile.weight == 0 ? "Weight is required" : "Please enter a weight between 50 and 500 lbs")
+                                .font(.caption)
+                                .foregroundColor(.red)
+                        }
                     }
                 }
             }
@@ -88,6 +115,12 @@ struct BasicInfoStepView: View {
         .onAppear {
             if viewModel.userProfile.weight > 0 {
                 weightText = String(Int(viewModel.userProfile.weight))
+            }
+        }
+        .onChange(of: viewModel.currentStep) { _ in
+            // Show validation hints when user tries to move away from step 1
+            if !hasInteracted {
+                hasInteracted = true
             }
         }
     }

@@ -256,7 +256,11 @@ struct RehabPlanView: View {
                         .foregroundColor(AppColors.success)
                 }
             } else {
-                Button(action: { viewModel.savePlanToFirestore() }) {
+                Button(action: {
+                    let impact = UIImpactFeedbackGenerator(style: .medium)
+                    impact.impactOccurred()
+                    viewModel.savePlanToFirestore()
+                }) {
                     HStack(spacing: AppSpacing.sm) {
                         if viewModel.isSaving {
                             ProgressView()

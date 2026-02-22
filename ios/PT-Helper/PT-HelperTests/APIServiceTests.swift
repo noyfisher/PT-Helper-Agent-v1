@@ -5,32 +5,18 @@ import XCTest
 
 final class APIConfigTests: XCTestCase {
 
-    func testAPIKeyIsNotEmpty() {
-        XCTAssertFalse(APIConfig.anthropicAPIKey.isEmpty, "API key must be configured")
-    }
-
-    func testAPIKeyStartsWithExpectedPrefix() {
+    func testProxyURLIsValid() {
+        let url = URL(string: APIConfig.claudeProxyURL)
+        XCTAssertNotNil(url, "Proxy URL must be valid")
+        XCTAssertEqual(url?.scheme, "https", "Proxy URL must use HTTPS")
         XCTAssertTrue(
-            APIConfig.anthropicAPIKey.hasPrefix("sk-ant-"),
-            "API key should start with 'sk-ant-'"
+            url?.host?.contains("cloudfunctions.net") == true,
+            "Proxy URL should point to Cloud Functions"
         )
-    }
-
-    func testBaseURLIsValid() {
-        let url = URL(string: APIConfig.anthropicBaseURL)
-        XCTAssertNotNil(url, "Base URL must be valid")
-        XCTAssertEqual(url?.scheme, "https")
-        XCTAssertEqual(url?.host, "api.anthropic.com")
     }
 
     func testModelNameIsNotEmpty() {
         XCTAssertFalse(APIConfig.anthropicModel.isEmpty)
-    }
-
-    func testAnthropicVersionFormat() {
-        // Version should be a date string like "2023-06-01"
-        let components = APIConfig.anthropicVersion.split(separator: "-")
-        XCTAssertEqual(components.count, 3, "Version should be in YYYY-MM-DD format")
     }
 
     func testMaxTokensIsReasonable() {
@@ -89,6 +75,22 @@ final class ClaudeAPIErrorTests: XCTestCase {
         let error = ClaudeAPIError.rateLimited
         XCTAssertNotNil(error.errorDescription)
         XCTAssertTrue(error.errorDescription!.lowercased().contains("busy"))
+    }
+
+    func testAuthenticationRequiredError() {
+        let error = ClaudeAPIError.authenticationRequired
+        XCTAssertNotNil(error.errorDescription)
+        XCTAssertTrue(error.errorDescription!.lowercased().contains("sign in"))
+    }
+
+    func testInvalidResponse_WithProxyErrorJSON() {
+        // Proxy returns { "error": "Rate limit exceeded..." } style errors
+        let proxyErrorBody = """
+        {"error":"Rate limit exceeded. Please wait before trying again."}
+        """
+        let error = ClaudeAPIError.invalidResponse(429, proxyErrorBody)
+        let description = error.errorDescription!
+        XCTAssertTrue(description.contains("Rate limit exceeded"), "Should parse proxy error message")
     }
 }
 

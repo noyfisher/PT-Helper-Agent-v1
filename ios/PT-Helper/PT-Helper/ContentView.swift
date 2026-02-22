@@ -9,6 +9,9 @@ struct ContentView: View {
     @State private var navigationId = UUID()
     @State private var planToDelete: RehabPlan? = nil
     @State private var showDeleteConfirmation = false
+    @State private var showSignOutConfirmation = false
+    @State private var showSignOutError = false
+    @State private var signOutErrorMessage = ""
 
     var body: some View {
         NavigationView {
@@ -61,6 +64,22 @@ struct ContentView: View {
                                 subtitle: "Track your recovery journey",
                                 destination: NotesView()
                             )
+
+                            QuickActionCard(
+                                icon: "figure.strengthtraining.traditional",
+                                gradientColors: [.purple, .indigo],
+                                title: "Log Workout",
+                                subtitle: "Record a workout session",
+                                destination: WorkoutSessionView()
+                            )
+
+                            QuickActionCard(
+                                icon: "chart.line.uptrend.xyaxis",
+                                gradientColors: [.teal, .blue],
+                                title: "Progress",
+                                subtitle: "View your pain trends and stats",
+                                destination: ProgressChartView()
+                            )
                         }
                         .padding(.horizontal, AppSpacing.xl)
 
@@ -72,7 +91,7 @@ struct ContentView: View {
 
                         // Sign out
                         Button(action: {
-                            try? Auth.auth().signOut()
+                            showSignOutConfirmation = true
                         }) {
                             HStack(spacing: 6) {
                                 Image(systemName: "rectangle.portrait.and.arrow.right")
@@ -80,8 +99,17 @@ struct ContentView: View {
                             }
                         }
                         .buttonStyle(DestructiveButtonStyle())
-                        .padding(.bottom, AppSpacing.xxl)
+
+                        // App version
+                        Text(appVersionText)
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                            .padding(.bottom, AppSpacing.xxl)
                     }
+                }
+                .refreshable {
+                    savedPlansViewModel.fetchRehabPlans()
+                    fetchUserName()
                 }
             }
             .navigationTitle("PT Helper")
@@ -94,6 +122,24 @@ struct ContentView: View {
             }
             .onReceive(NotificationCenter.default.publisher(for: .popToRoot)) { _ in
                 navigationId = UUID()
+            }
+            .confirmationDialog("Sign Out", isPresented: $showSignOutConfirmation, titleVisibility: .visible) {
+                Button("Sign Out", role: .destructive) {
+                    do {
+                        try Auth.auth().signOut()
+                    } catch {
+                        signOutErrorMessage = error.localizedDescription
+                        showSignOutError = true
+                    }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Are you sure you want to sign out?")
+            }
+            .alert("Sign Out Failed", isPresented: $showSignOutError) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(signOutErrorMessage)
             }
         }
         .id(navigationId)
@@ -111,6 +157,22 @@ struct ContentView: View {
                     ProgressView()
                     Spacer()
                 }
+                .padding(.vertical, AppSpacing.xl)
+            } else if let error = savedPlansViewModel.loadError {
+                VStack(spacing: AppSpacing.md) {
+                    Image(systemName: "wifi.exclamationmark")
+                        .font(.title2)
+                        .foregroundColor(.orange)
+                    Text(error)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                    Button("Retry") {
+                        savedPlansViewModel.fetchRehabPlans()
+                    }
+                    .buttonStyle(SecondaryButtonStyle())
+                }
+                .frame(maxWidth: .infinity)
                 .padding(.vertical, AppSpacing.xl)
             } else if savedPlansViewModel.rehabPlans.isEmpty {
                 EmptyStateView(
@@ -184,6 +246,12 @@ struct ContentView: View {
         case 17..<22: return "Good evening"
         default: return "Good night"
         }
+    }
+
+    private var appVersionText: String {
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
+        return "PT Helper v\(version) (\(build))"
     }
 
     private func fetchUserName() {
@@ -303,6 +371,8 @@ struct OnboardingEditView: View {
                                 }
                             }
                             .buttonStyle(PrimaryButtonStyle())
+                            .disabled(!viewModel.canProceedFromCurrentStep)
+                            .opacity(viewModel.canProceedFromCurrentStep ? 1.0 : 0.5)
                         }
                     }
                     .padding(.horizontal, AppSpacing.xl)

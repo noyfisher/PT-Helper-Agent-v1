@@ -8,10 +8,10 @@ class OnboardingViewModel: ObservableObject {
     @Published var userProfile = UserProfile(userId: Auth.auth().currentUser?.uid ?? "",
                                              firstName: "",
                                              lastName: "",
-                                             dateOfBirth: Date(),
+                                             dateOfBirth: Calendar.current.date(byAdding: .year, value: -30, to: Date()) ?? Date(),
                                              sex: "",
-                                             heightFeet: 0,
-                                             heightInches: 0,
+                                             heightFeet: 5,
+                                             heightInches: 7,
                                              weight: 0.0,
                                              medicalConditions: [],
                                              otherMedicalConditions: nil,
@@ -139,8 +139,29 @@ class OnboardingViewModel: ObservableObject {
         }
     }
 
+    /// Whether the current step has all required fields filled in
+    var canProceedFromCurrentStep: Bool {
+        switch currentStep {
+        case 1:
+            // Basic info: need first name, last name, sex, reasonable height/weight
+            let hasName = !userProfile.firstName.trimmingCharacters(in: .whitespaces).isEmpty
+                && !userProfile.lastName.trimmingCharacters(in: .whitespaces).isEmpty
+            let hasSex = !userProfile.sex.isEmpty
+            let hasHeight = userProfile.heightFeet >= 3 && userProfile.heightFeet <= 7
+            let hasWeight = userProfile.weight >= 50 && userProfile.weight <= 500
+            return hasName && hasSex && hasHeight && hasWeight
+        case 5:
+            // Activity level must be selected
+            return !userProfile.activityLevel.isEmpty
+        default:
+            // Steps 2, 3, 4 (medical, surgical, injury history) are optional
+            // Step 6 is the review/submit step
+            return true
+        }
+    }
+
     func nextStep() {
-        if currentStep < 6 {
+        if currentStep < 6 && canProceedFromCurrentStep {
             currentStep += 1
         }
     }

@@ -8,16 +8,18 @@ struct BodySilhouetteView: View {
     let sex: String
     let side: BodySide
 
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                // Body silhouette fill
+                // Body silhouette fill — adapts to dark mode
                 bodyShape(for: sex, in: geometry.size)
                     .fill(
                         LinearGradient(
                             colors: [
-                                Color.gray.opacity(0.06),
-                                Color.gray.opacity(0.12)
+                                Color(.label).opacity(colorScheme == .dark ? 0.08 : 0.06),
+                                Color(.label).opacity(colorScheme == .dark ? 0.15 : 0.12)
                             ],
                             startPoint: .top,
                             endPoint: .bottom
@@ -26,18 +28,20 @@ struct BodySilhouetteView: View {
 
                 // Body silhouette stroke
                 bodyShape(for: sex, in: geometry.size)
-                    .stroke(Color.gray.opacity(0.25), lineWidth: 1.5)
+                    .stroke(Color(.label).opacity(colorScheme == .dark ? 0.35 : 0.25), lineWidth: 1.5)
 
                 // Back view spine line
                 if side == .back {
                     spineLine(in: geometry.size)
                         .stroke(
-                            Color.gray.opacity(0.15),
+                            Color(.label).opacity(colorScheme == .dark ? 0.20 : 0.15),
                             style: StrokeStyle(lineWidth: 1.5, dash: [6, 4])
                         )
                 }
             }
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(sex.isEmpty ? "Neutral" : sex) body silhouette, \(side == .front ? "front" : "back") view")
     }
 
     // MARK: - Shape Selection

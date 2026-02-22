@@ -69,10 +69,13 @@ struct AnalysisResultView: View {
                     ProgressView(value: condition.confidence, total: 100)
                         .progressViewStyle(LinearProgressViewStyle(tint: confidenceColor(condition.confidence)))
                         .frame(width: 80)
+                        .accessibilityHidden(true)
                     Text("\(Int(condition.confidence))% match")
                         .font(.caption.weight(.medium))
                         .foregroundColor(confidenceColor(condition.confidence))
                 }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("\(condition.commonName), \(Int(condition.confidence)) percent match")
             }
             .padding(AppSpacing.lg)
             .frame(maxWidth: .infinity, alignment: .leading)

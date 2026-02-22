@@ -7,6 +7,7 @@ import FirebaseAuth
 class SavedPlansViewModel: ObservableObject {
     @Published var rehabPlans: [RehabPlan] = []
     @Published var isLoading: Bool = false
+    @Published var loadError: String?
     
     private let db = Firestore.firestore()
     
@@ -24,8 +25,10 @@ class SavedPlansViewModel: ObservableObject {
                 self.isLoading = false
                 if let error = error {
                     print("Error fetching rehab plans: \(error.localizedDescription)")
+                    self.loadError = "Unable to load your rehab plans. Please pull down to retry."
                     return
                 }
+                self.loadError = nil
                 self.rehabPlans = snapshot?.documents.compactMap { document -> RehabPlan? in
                     let data = document.data()
                     guard let idString = data["id"] as? String,

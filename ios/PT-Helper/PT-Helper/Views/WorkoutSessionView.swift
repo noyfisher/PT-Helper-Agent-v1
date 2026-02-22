@@ -36,6 +36,8 @@ struct WorkoutSessionView: View {
 
                             Slider(value: $painLevel, in: 0...10, step: 1)
                                 .tint(painColor)
+                                .accessibilityLabel("Pain level")
+                                .accessibilityValue("\(Int(painLevel)) out of 10, \(painDescription)")
 
                             HStack {
                                 Text("No pain")
@@ -64,6 +66,8 @@ struct WorkoutSessionView: View {
 
                             Slider(value: $durationMinutes, in: 5...120, step: 5)
                                 .tint(.orange)
+                                .accessibilityLabel("Workout duration")
+                                .accessibilityValue("\(Int(durationMinutes)) minutes")
 
                             HStack {
                                 Text("5 min")
@@ -135,6 +139,9 @@ struct WorkoutSessionView: View {
             isCompleted: true
         )
         viewModel.addSession(session: session)
+
+        let notification = UINotificationFeedbackGenerator()
+        notification.notificationOccurred(.success)
 
         withAnimation(.spring(response: 0.3)) {
             showSavedConfirmation = true
