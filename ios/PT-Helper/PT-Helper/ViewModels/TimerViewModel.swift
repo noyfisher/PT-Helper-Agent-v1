@@ -2,7 +2,7 @@ import Foundation
 import Combine
 
 class TimerViewModel: ObservableObject {
-    @Published var timer: Timer
+    @Published var timer: ExerciseTimer
     private var timerSubscription: AnyCancellable?
 
     var timeString: String {
@@ -12,13 +12,13 @@ class TimerViewModel: ObservableObject {
     }
 
     init() {
-        self.timer = Timer(duration: 300) // 5 minutes
+        self.timer = ExerciseTimer(duration: 300) // 5 minutes
     }
 
     func start() {
         guard !timer.isRunning else { return }
         timer.isRunning = true
-        timerSubscription = Timer.publish(every: 1, on: .main, in: .common)
+        timerSubscription = Foundation.Timer.publish(every: 1, on: .main, in: .common)
             .autoconnect()
             .sink { [weak self] _ in
                 self?.updateTimer()

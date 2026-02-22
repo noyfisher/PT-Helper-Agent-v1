@@ -1,6 +1,6 @@
 import Foundation
 
-class Timer {
+class ExerciseTimer {
     var duration: Int
     var isRunning: Bool
     var timeRemaining: Int

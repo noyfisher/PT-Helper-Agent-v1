@@ -7,6 +7,7 @@ import FirebaseFirestore
 struct LoginView: View {
     var onSignedIn: () -> Void
     @StateObject private var vm = LoginVM()
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         VStack(spacing: 20) {
@@ -17,7 +18,7 @@ struct LoginView: View {
             } onCompletion: { result in
                 vm.handle(result) { onSignedIn() } // sign into Firebase
             }
-            .signInWithAppleButtonStyle(.black)
+            .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
             .frame(height: 50)
             .padding(.horizontal, 32)
 

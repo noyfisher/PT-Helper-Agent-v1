@@ -1,0 +1,152 @@
+import SwiftUI
+
+struct BodyMapView: View {
+    @StateObject private var viewModel = BodyMapViewModel()
+    @State private var navigateToPainDetail = false
+
+    var body: some View {
+        ZStack {
+            Color(.systemGroupedBackground)
+                .ignoresSafeArea()
+
+            VStack(spacing: 16) {
+                // Header
+                VStack(spacing: 6) {
+                    Text("Where does it hurt?")
+                        .font(.title2.weight(.bold))
+                        .foregroundColor(.primary)
+                    Text("Tap all areas where you feel pain or discomfort")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .padding(.top, 20)
+
+                // Front / Back picker
+                Picker("Body Side", selection: $viewModel.currentSide) {
+                    Text("Front").tag(BodySide.front)
+                    Text("Back").tag(BodySide.back)
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal, 20)
+
+                // Body map
+                GeometryReader { geometry in
+                    ZStack {
+                        // Gender-specific body silhouette
+                        BodySilhouetteView(
+                            sex: viewModel.userProfile.sex,
+                            side: viewModel.currentSide
+                        )
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                        // "Back View" label when on back side
+                        if viewModel.currentSide == .back {
+                            VStack {
+                                Text("BACK VIEW")
+                                    .font(.caption2.weight(.bold))
+                                    .foregroundColor(.secondary)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(Color(.systemGray5))
+                                    .cornerRadius(AppCorners.small)
+                                Spacer()
+                            }
+                        }
+
+                        // Tappable region hotspots for current side
+                        ForEach(viewModel.regionsForCurrentSide) { region in
+                            if let relPos = region.position(for: viewModel.currentSide) {
+                                let position = CGPoint(
+                                    x: relPos.x * geometry.size.width,
+                                    y: relPos.y * geometry.size.height
+                                )
+
+                                Button(action: {
+                                    let impact = UIImpactFeedbackGenerator(style: .light)
+                                    impact.impactOccurred()
+                                    withAnimation(.spring(response: 0.3)) {
+                                        viewModel.toggleSelection(for: region)
+                                    }
+                                }) {
+                                    VStack(spacing: 2) {
+                                        Circle()
+                                            .fill(region.isSelected ? Color.blue : Color.blue.opacity(0.15))
+                                            .frame(width: 44, height: 44)
+                                            .overlay(
+                                                Circle()
+                                                    .stroke(Color.blue, lineWidth: region.isSelected ? 0 : 1.5)
+                                            )
+                                            .overlay(
+                                                Image(systemName: region.isSelected ? "checkmark" : "plus")
+                                                    .font(.system(size: 14, weight: .bold))
+                                                    .foregroundColor(region.isSelected ? .white : .blue)
+                                            )
+                                            .scaleEffect(region.isSelected ? 1.1 : 1.0)
+
+                                        Text(region.name)
+                                            .font(.system(size: 8, weight: .medium))
+                                            .foregroundColor(region.isSelected ? .blue : .secondary)
+                                            .lineLimit(1)
+                                    }
+                                }
+                                .position(position)
+                                .accessibilityLabel("\(region.name)\(region.isSelected ? ", selected" : "")")
+                                .accessibilityHint(region.isSelected ? "Double tap to deselect this pain area" : "Double tap to select this pain area")
+                            }
+                        }
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .animation(.easeInOut(duration: 0.25), value: viewModel.currentSide)
+                }
+                .padding(AppSpacing.lg)
+                .background(AppColors.cardBackground)
+                .cornerRadius(AppCorners.large)
+                .shadow(color: .black.opacity(0.04), radius: 8, y: 2)
+                .padding(.horizontal, 20)
+
+                // Summary bar and actions
+                VStack(spacing: 12) {
+                    HStack {
+                        Text("\(viewModel.selectedRegions.count) area(s) selected")
+                            .font(.subheadline.weight(.medium))
+                            .foregroundColor(.primary)
+                        Spacer()
+                        if !viewModel.selectedRegions.isEmpty {
+                            Button(action: { viewModel.clearAll() }) {
+                                Text("Clear All")
+                            }
+                            .buttonStyle(DestructiveButtonStyle())
+                        }
+                    }
+
+                    NavigationLink(
+                        destination: PainDetailView(
+                            viewModel: InjuryAnalysisViewModel(
+                                userProfile: viewModel.userProfile,
+                                selectedRegions: viewModel.selectedRegions
+                            )
+                        ),
+                        isActive: $navigateToPainDetail
+                    ) {
+                        EmptyView()
+                    }
+
+                    Button(action: { navigateToPainDetail = true }) {
+                        HStack(spacing: AppSpacing.sm) {
+                            Text("Continue")
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 13, weight: .bold))
+                        }
+                    }
+                    .buttonStyle(PrimaryButtonStyle(isDisabled: viewModel.selectedRegions.isEmpty))
+                    .disabled(viewModel.selectedRegions.isEmpty)
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 30)
+            }
+        }
+        .navigationTitle("Body Map")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}

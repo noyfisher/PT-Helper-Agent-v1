@@ -1,5 +1,1 @@
-<<<<<<< HEAD
-ios-add-exercise-timer-feature
-=======
-ios-create-exercise-tracking-module
->>>>>>> 1b097101382f0b503d6e8275b44f57c25f1ea248
+ios-agent-multi-4-tasks
